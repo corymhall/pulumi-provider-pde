@@ -1,0 +1,8 @@
+github.com/pulumi/pulumi-go-provider/integration v0.10.0 h1:GHesnrrvkboSjkZpC+qRwjkXBp5d+fSXqlIO92zQxvc=
+github.com/pulumi/pulumi-go-provider/integration v0.10.0/go.mod h1:qAbKHpPzANFKOyjiQ0CzdgJh4DtM0gtujKhO7+l3/+w=
+github.com/blang/semver v3.5.1+incompatible/go.mod h1:kRBLl5iJ+tD4TcOOxsy/0fnwebNt5EWlYSAyrTnjyyk=
+github.com/pulumi/pulumi-go-provider v0.11.0/go.mod h1:6yOfJ+g5JkflllURGekK7lncGBaLLbSuwAfHpuTD+E4=
+github.com/pulumi/pulumi-go-provider v0.11.1/go.mod h1:6yOfJ+g5JkflllURGekK7lncGBaLLbSuwAfHpuTD+E4=
+github.com/pulumi/pulumi/sdk/v3 v3.78.1/go.mod h1:FEFictCHoa8CYzKDSc0t9ErrNiaO9n7pChreLQLDH+M=
+github.com/stretchr/testify v1.8.3/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
+github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
