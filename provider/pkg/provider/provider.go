@@ -1,7 +1,9 @@
 package provider
 
 import (
+	"github.com/corymhall/pulumi-provider-pde/provider/pkg/provider/installers"
 	"github.com/corymhall/pulumi-provider-pde/provider/pkg/provider/local"
+
 	p "github.com/pulumi/pulumi-go-provider"
 	"github.com/pulumi/pulumi-go-provider/infer"
 	"github.com/pulumi/pulumi-go-provider/middleware/schema"
@@ -25,6 +27,8 @@ func NewProvider() p.Provider {
 		},
 		Resources: []infer.InferredResource{
 			infer.Resource[*local.Link, local.LinkArgs, local.LinkState](),
+			infer.Resource[*installers.GitHubRelease, installers.GitHubReleaseInputs, installers.GitHubReleaseOutputs](),
+			infer.Resource[*installers.GitHubRepo, installers.GitHubRepoInputs, installers.GitHubRepoOutputs](),
 		},
 	})
 

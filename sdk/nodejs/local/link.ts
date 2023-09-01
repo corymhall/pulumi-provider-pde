@@ -31,13 +31,14 @@ export class Link extends pulumi.CustomResource {
         return obj['__pulumiType'] === Link.__pulumiType;
     }
 
-    public readonly exists!: pulumi.Output<boolean>;
-    public readonly is_dir!: pulumi.Output<boolean>;
-    public readonly linked!: pulumi.Output<boolean>;
-    public readonly overwrite!: pulumi.Output<boolean>;
-    public /*out*/ readonly result!: pulumi.Output<string>;
+    public /*out*/ readonly is_dir!: pulumi.Output<boolean>;
+    public /*out*/ readonly linked!: pulumi.Output<boolean>;
+    public readonly overwrite!: pulumi.Output<boolean | undefined>;
+    public readonly recursive!: pulumi.Output<boolean | undefined>;
+    public readonly retain!: pulumi.Output<boolean | undefined>;
     public readonly source!: pulumi.Output<string>;
     public readonly target!: pulumi.Output<string>;
+    public /*out*/ readonly targets!: pulumi.Output<string[]>;
 
     /**
      * Create a Link resource with the given unique name, arguments, and options.
@@ -50,39 +51,29 @@ export class Link extends pulumi.CustomResource {
         let resourceInputs: pulumi.Inputs = {};
         opts = opts || {};
         if (!opts.id) {
-            if ((!args || args.exists === undefined) && !opts.urn) {
-                throw new Error("Missing required property 'exists'");
-            }
-            if ((!args || args.is_dir === undefined) && !opts.urn) {
-                throw new Error("Missing required property 'is_dir'");
-            }
-            if ((!args || args.linked === undefined) && !opts.urn) {
-                throw new Error("Missing required property 'linked'");
-            }
-            if ((!args || args.overwrite === undefined) && !opts.urn) {
-                throw new Error("Missing required property 'overwrite'");
-            }
             if ((!args || args.source === undefined) && !opts.urn) {
                 throw new Error("Missing required property 'source'");
             }
             if ((!args || args.target === undefined) && !opts.urn) {
                 throw new Error("Missing required property 'target'");
             }
-            resourceInputs["exists"] = args ? args.exists : undefined;
-            resourceInputs["is_dir"] = args ? args.is_dir : undefined;
-            resourceInputs["linked"] = args ? args.linked : undefined;
             resourceInputs["overwrite"] = args ? args.overwrite : undefined;
+            resourceInputs["recursive"] = args ? args.recursive : undefined;
+            resourceInputs["retain"] = args ? args.retain : undefined;
             resourceInputs["source"] = args ? args.source : undefined;
             resourceInputs["target"] = args ? args.target : undefined;
-            resourceInputs["result"] = undefined /*out*/;
+            resourceInputs["is_dir"] = undefined /*out*/;
+            resourceInputs["linked"] = undefined /*out*/;
+            resourceInputs["targets"] = undefined /*out*/;
         } else {
-            resourceInputs["exists"] = undefined /*out*/;
             resourceInputs["is_dir"] = undefined /*out*/;
             resourceInputs["linked"] = undefined /*out*/;
             resourceInputs["overwrite"] = undefined /*out*/;
-            resourceInputs["result"] = undefined /*out*/;
+            resourceInputs["recursive"] = undefined /*out*/;
+            resourceInputs["retain"] = undefined /*out*/;
             resourceInputs["source"] = undefined /*out*/;
             resourceInputs["target"] = undefined /*out*/;
+            resourceInputs["targets"] = undefined /*out*/;
         }
         opts = pulumi.mergeOptions(utilities.resourceOptsDefaults(), opts);
         super(Link.__pulumiType, name, resourceInputs, opts);
@@ -93,10 +84,9 @@ export class Link extends pulumi.CustomResource {
  * The set of arguments for constructing a Link resource.
  */
 export interface LinkArgs {
-    exists: pulumi.Input<boolean>;
-    is_dir: pulumi.Input<boolean>;
-    linked: pulumi.Input<boolean>;
-    overwrite: pulumi.Input<boolean>;
+    overwrite?: pulumi.Input<boolean>;
+    recursive?: pulumi.Input<boolean>;
+    retain?: pulumi.Input<boolean>;
     source: pulumi.Input<string>;
     target: pulumi.Input<string>;
 }

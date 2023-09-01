@@ -12,9 +12,11 @@ utilities.lazyLoad(exports, ["Provider"], () => require("./provider"));
 
 
 // Export sub-modules:
+import * as installers from "./installers";
 import * as local from "./local";
 
 export {
+    installers,
     local,
 };
 pulumi.runtime.registerResourcePackage("pde", {

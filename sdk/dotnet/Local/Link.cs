@@ -12,9 +12,6 @@ namespace Pulumi.Pde.Local
     [PdeResourceType("pde:local:Link")]
     public partial class Link : global::Pulumi.CustomResource
     {
-        [Output("exists")]
-        public Output<bool> Exists { get; private set; } = null!;
-
         [Output("is_dir")]
         public Output<bool> Is_dir { get; private set; } = null!;
 
@@ -22,16 +19,22 @@ namespace Pulumi.Pde.Local
         public Output<bool> Linked { get; private set; } = null!;
 
         [Output("overwrite")]
-        public Output<bool> Overwrite { get; private set; } = null!;
+        public Output<bool?> Overwrite { get; private set; } = null!;
 
-        [Output("result")]
-        public Output<string> Result { get; private set; } = null!;
+        [Output("recursive")]
+        public Output<bool?> Recursive { get; private set; } = null!;
+
+        [Output("retain")]
+        public Output<bool?> Retain { get; private set; } = null!;
 
         [Output("source")]
         public Output<string> Source { get; private set; } = null!;
 
         [Output("target")]
         public Output<string> Target { get; private set; } = null!;
+
+        [Output("targets")]
+        public Output<ImmutableArray<string>> Targets { get; private set; } = null!;
 
 
         /// <summary>
@@ -78,17 +81,14 @@ namespace Pulumi.Pde.Local
 
     public sealed class LinkArgs : global::Pulumi.ResourceArgs
     {
-        [Input("exists", required: true)]
-        public Input<bool> Exists { get; set; } = null!;
+        [Input("overwrite")]
+        public Input<bool>? Overwrite { get; set; }
 
-        [Input("is_dir", required: true)]
-        public Input<bool> Is_dir { get; set; } = null!;
+        [Input("recursive")]
+        public Input<bool>? Recursive { get; set; }
 
-        [Input("linked", required: true)]
-        public Input<bool> Linked { get; set; } = null!;
-
-        [Input("overwrite", required: true)]
-        public Input<bool> Overwrite { get; set; } = null!;
+        [Input("retain")]
+        public Input<bool>? Retain { get; set; }
 
         [Input("source", required: true)]
         public Input<string> Source { get; set; } = null!;

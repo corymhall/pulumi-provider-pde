@@ -15,13 +15,14 @@ import (
 type Link struct {
 	pulumi.CustomResourceState
 
-	Exists    pulumi.BoolOutput   `pulumi:"exists"`
-	Is_dir    pulumi.BoolOutput   `pulumi:"is_dir"`
-	Linked    pulumi.BoolOutput   `pulumi:"linked"`
-	Overwrite pulumi.BoolOutput   `pulumi:"overwrite"`
-	Result    pulumi.StringOutput `pulumi:"result"`
-	Source    pulumi.StringOutput `pulumi:"source"`
-	Target    pulumi.StringOutput `pulumi:"target"`
+	Is_dir    pulumi.BoolOutput        `pulumi:"is_dir"`
+	Linked    pulumi.BoolOutput        `pulumi:"linked"`
+	Overwrite pulumi.BoolPtrOutput     `pulumi:"overwrite"`
+	Recursive pulumi.BoolPtrOutput     `pulumi:"recursive"`
+	Retain    pulumi.BoolPtrOutput     `pulumi:"retain"`
+	Source    pulumi.StringOutput      `pulumi:"source"`
+	Target    pulumi.StringOutput      `pulumi:"target"`
+	Targets   pulumi.StringArrayOutput `pulumi:"targets"`
 }
 
 // NewLink registers a new resource with the given unique name, arguments, and options.
@@ -31,18 +32,6 @@ func NewLink(ctx *pulumi.Context,
 		return nil, errors.New("missing one or more required arguments")
 	}
 
-	if args.Exists == nil {
-		return nil, errors.New("invalid value for required argument 'Exists'")
-	}
-	if args.Is_dir == nil {
-		return nil, errors.New("invalid value for required argument 'Is_dir'")
-	}
-	if args.Linked == nil {
-		return nil, errors.New("invalid value for required argument 'Linked'")
-	}
-	if args.Overwrite == nil {
-		return nil, errors.New("invalid value for required argument 'Overwrite'")
-	}
 	if args.Source == nil {
 		return nil, errors.New("invalid value for required argument 'Source'")
 	}
@@ -82,20 +71,18 @@ func (LinkState) ElementType() reflect.Type {
 }
 
 type linkArgs struct {
-	Exists    bool   `pulumi:"exists"`
-	Is_dir    bool   `pulumi:"is_dir"`
-	Linked    bool   `pulumi:"linked"`
-	Overwrite bool   `pulumi:"overwrite"`
+	Overwrite *bool  `pulumi:"overwrite"`
+	Recursive *bool  `pulumi:"recursive"`
+	Retain    *bool  `pulumi:"retain"`
 	Source    string `pulumi:"source"`
 	Target    string `pulumi:"target"`
 }
 
 // The set of arguments for constructing a Link resource.
 type LinkArgs struct {
-	Exists    pulumi.BoolInput
-	Is_dir    pulumi.BoolInput
-	Linked    pulumi.BoolInput
-	Overwrite pulumi.BoolInput
+	Overwrite pulumi.BoolPtrInput
+	Recursive pulumi.BoolPtrInput
+	Retain    pulumi.BoolPtrInput
 	Source    pulumi.StringInput
 	Target    pulumi.StringInput
 }
@@ -137,10 +124,6 @@ func (o LinkOutput) ToLinkOutputWithContext(ctx context.Context) LinkOutput {
 	return o
 }
 
-func (o LinkOutput) Exists() pulumi.BoolOutput {
-	return o.ApplyT(func(v *Link) pulumi.BoolOutput { return v.Exists }).(pulumi.BoolOutput)
-}
-
 func (o LinkOutput) Is_dir() pulumi.BoolOutput {
 	return o.ApplyT(func(v *Link) pulumi.BoolOutput { return v.Is_dir }).(pulumi.BoolOutput)
 }
@@ -149,12 +132,16 @@ func (o LinkOutput) Linked() pulumi.BoolOutput {
 	return o.ApplyT(func(v *Link) pulumi.BoolOutput { return v.Linked }).(pulumi.BoolOutput)
 }
 
-func (o LinkOutput) Overwrite() pulumi.BoolOutput {
-	return o.ApplyT(func(v *Link) pulumi.BoolOutput { return v.Overwrite }).(pulumi.BoolOutput)
+func (o LinkOutput) Overwrite() pulumi.BoolPtrOutput {
+	return o.ApplyT(func(v *Link) pulumi.BoolPtrOutput { return v.Overwrite }).(pulumi.BoolPtrOutput)
 }
 
-func (o LinkOutput) Result() pulumi.StringOutput {
-	return o.ApplyT(func(v *Link) pulumi.StringOutput { return v.Result }).(pulumi.StringOutput)
+func (o LinkOutput) Recursive() pulumi.BoolPtrOutput {
+	return o.ApplyT(func(v *Link) pulumi.BoolPtrOutput { return v.Recursive }).(pulumi.BoolPtrOutput)
+}
+
+func (o LinkOutput) Retain() pulumi.BoolPtrOutput {
+	return o.ApplyT(func(v *Link) pulumi.BoolPtrOutput { return v.Retain }).(pulumi.BoolPtrOutput)
 }
 
 func (o LinkOutput) Source() pulumi.StringOutput {
@@ -163,6 +150,10 @@ func (o LinkOutput) Source() pulumi.StringOutput {
 
 func (o LinkOutput) Target() pulumi.StringOutput {
 	return o.ApplyT(func(v *Link) pulumi.StringOutput { return v.Target }).(pulumi.StringOutput)
+}
+
+func (o LinkOutput) Targets() pulumi.StringArrayOutput {
+	return o.ApplyT(func(v *Link) pulumi.StringArrayOutput { return v.Targets }).(pulumi.StringArrayOutput)
 }
 
 func init() {

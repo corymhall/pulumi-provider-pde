@@ -14,6 +14,9 @@
     },
     "files": [
         "index.ts",
+        "installers/gitHubRelease.ts",
+        "installers/gitHubRepo.ts",
+        "installers/index.ts",
         "local/index.ts",
         "local/link.ts",
         "provider.ts",
