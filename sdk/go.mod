@@ -1,4 +1,4 @@
-module github.com/corymhall/pulumi-provider-local/sdk/v3
+module github.com/corymhall/pulumi-provider-pde/sdk
 
 go 1.17
 
