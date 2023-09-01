@@ -8,14 +8,14 @@ import (
 	"reflect"
 
 	"errors"
+	"github.com/corymhall/pulumi-provider-pde/sdk/go/pde/internal"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"internal"
 )
 
 type Link struct {
 	pulumi.CustomResourceState
 
-	Is_dir    pulumi.BoolOutput        `pulumi:"is_dir"`
+	IsDir     pulumi.BoolOutput        `pulumi:"isDir"`
 	Linked    pulumi.BoolOutput        `pulumi:"linked"`
 	Overwrite pulumi.BoolPtrOutput     `pulumi:"overwrite"`
 	Recursive pulumi.BoolPtrOutput     `pulumi:"recursive"`
@@ -110,6 +110,56 @@ func (i *Link) ToLinkOutputWithContext(ctx context.Context) LinkOutput {
 	return pulumi.ToOutputWithContext(ctx, i).(LinkOutput)
 }
 
+// LinkArrayInput is an input type that accepts LinkArray and LinkArrayOutput values.
+// You can construct a concrete instance of `LinkArrayInput` via:
+//
+//	LinkArray{ LinkArgs{...} }
+type LinkArrayInput interface {
+	pulumi.Input
+
+	ToLinkArrayOutput() LinkArrayOutput
+	ToLinkArrayOutputWithContext(context.Context) LinkArrayOutput
+}
+
+type LinkArray []LinkInput
+
+func (LinkArray) ElementType() reflect.Type {
+	return reflect.TypeOf((*[]*Link)(nil)).Elem()
+}
+
+func (i LinkArray) ToLinkArrayOutput() LinkArrayOutput {
+	return i.ToLinkArrayOutputWithContext(context.Background())
+}
+
+func (i LinkArray) ToLinkArrayOutputWithContext(ctx context.Context) LinkArrayOutput {
+	return pulumi.ToOutputWithContext(ctx, i).(LinkArrayOutput)
+}
+
+// LinkMapInput is an input type that accepts LinkMap and LinkMapOutput values.
+// You can construct a concrete instance of `LinkMapInput` via:
+//
+//	LinkMap{ "key": LinkArgs{...} }
+type LinkMapInput interface {
+	pulumi.Input
+
+	ToLinkMapOutput() LinkMapOutput
+	ToLinkMapOutputWithContext(context.Context) LinkMapOutput
+}
+
+type LinkMap map[string]LinkInput
+
+func (LinkMap) ElementType() reflect.Type {
+	return reflect.TypeOf((*map[string]*Link)(nil)).Elem()
+}
+
+func (i LinkMap) ToLinkMapOutput() LinkMapOutput {
+	return i.ToLinkMapOutputWithContext(context.Background())
+}
+
+func (i LinkMap) ToLinkMapOutputWithContext(ctx context.Context) LinkMapOutput {
+	return pulumi.ToOutputWithContext(ctx, i).(LinkMapOutput)
+}
+
 type LinkOutput struct{ *pulumi.OutputState }
 
 func (LinkOutput) ElementType() reflect.Type {
@@ -124,8 +174,8 @@ func (o LinkOutput) ToLinkOutputWithContext(ctx context.Context) LinkOutput {
 	return o
 }
 
-func (o LinkOutput) Is_dir() pulumi.BoolOutput {
-	return o.ApplyT(func(v *Link) pulumi.BoolOutput { return v.Is_dir }).(pulumi.BoolOutput)
+func (o LinkOutput) IsDir() pulumi.BoolOutput {
+	return o.ApplyT(func(v *Link) pulumi.BoolOutput { return v.IsDir }).(pulumi.BoolOutput)
 }
 
 func (o LinkOutput) Linked() pulumi.BoolOutput {
@@ -156,7 +206,51 @@ func (o LinkOutput) Targets() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v *Link) pulumi.StringArrayOutput { return v.Targets }).(pulumi.StringArrayOutput)
 }
 
+type LinkArrayOutput struct{ *pulumi.OutputState }
+
+func (LinkArrayOutput) ElementType() reflect.Type {
+	return reflect.TypeOf((*[]*Link)(nil)).Elem()
+}
+
+func (o LinkArrayOutput) ToLinkArrayOutput() LinkArrayOutput {
+	return o
+}
+
+func (o LinkArrayOutput) ToLinkArrayOutputWithContext(ctx context.Context) LinkArrayOutput {
+	return o
+}
+
+func (o LinkArrayOutput) Index(i pulumi.IntInput) LinkOutput {
+	return pulumi.All(o, i).ApplyT(func(vs []interface{}) *Link {
+		return vs[0].([]*Link)[vs[1].(int)]
+	}).(LinkOutput)
+}
+
+type LinkMapOutput struct{ *pulumi.OutputState }
+
+func (LinkMapOutput) ElementType() reflect.Type {
+	return reflect.TypeOf((*map[string]*Link)(nil)).Elem()
+}
+
+func (o LinkMapOutput) ToLinkMapOutput() LinkMapOutput {
+	return o
+}
+
+func (o LinkMapOutput) ToLinkMapOutputWithContext(ctx context.Context) LinkMapOutput {
+	return o
+}
+
+func (o LinkMapOutput) MapIndex(k pulumi.StringInput) LinkOutput {
+	return pulumi.All(o, k).ApplyT(func(vs []interface{}) *Link {
+		return vs[0].(map[string]*Link)[vs[1].(string)]
+	}).(LinkOutput)
+}
+
 func init() {
 	pulumi.RegisterInputType(reflect.TypeOf((*LinkInput)(nil)).Elem(), &Link{})
+	pulumi.RegisterInputType(reflect.TypeOf((*LinkArrayInput)(nil)).Elem(), LinkArray{})
+	pulumi.RegisterInputType(reflect.TypeOf((*LinkMapInput)(nil)).Elem(), LinkMap{})
 	pulumi.RegisterOutputType(LinkOutput{})
+	pulumi.RegisterOutputType(LinkArrayOutput{})
+	pulumi.RegisterOutputType(LinkMapOutput{})
 }

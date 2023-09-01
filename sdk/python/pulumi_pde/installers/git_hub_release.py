@@ -59,7 +59,7 @@ class GitHubReleaseArgs:
         pulumi.set(self, "repo", value)
 
     @property
-    @pulumi.getter
+    @pulumi.getter(name="assetName")
     def asset_name(self) -> Optional[pulumi.Input[str]]:
         return pulumi.get(self, "asset_name")
 
@@ -77,7 +77,7 @@ class GitHubReleaseArgs:
         pulumi.set(self, "executable", value)
 
     @property
-    @pulumi.getter
+    @pulumi.getter(name="installCommands")
     def install_commands(self) -> Optional[pulumi.Input[Sequence[pulumi.Input[str]]]]:
         return pulumi.get(self, "install_commands")
 
@@ -86,7 +86,7 @@ class GitHubReleaseArgs:
         pulumi.set(self, "install_commands", value)
 
     @property
-    @pulumi.getter
+    @pulumi.getter(name="releaseVersion")
     def release_version(self) -> Optional[pulumi.Input[str]]:
         return pulumi.get(self, "release_version")
 
@@ -95,7 +95,7 @@ class GitHubReleaseArgs:
         pulumi.set(self, "release_version", value)
 
     @property
-    @pulumi.getter
+    @pulumi.getter(name="uninstallCommands")
     def uninstall_commands(self) -> Optional[pulumi.Input[Sequence[pulumi.Input[str]]]]:
         return pulumi.get(self, "uninstall_commands")
 
@@ -104,7 +104,7 @@ class GitHubReleaseArgs:
         pulumi.set(self, "uninstall_commands", value)
 
     @property
-    @pulumi.getter
+    @pulumi.getter(name="updateCommands")
     def update_commands(self) -> Optional[pulumi.Input[Sequence[pulumi.Input[str]]]]:
         return pulumi.get(self, "update_commands")
 
@@ -225,7 +225,7 @@ class GitHubRelease(pulumi.CustomResource):
         return GitHubRelease(resource_name, opts=opts, __props__=__props__)
 
     @property
-    @pulumi.getter
+    @pulumi.getter(name="assetName")
     def asset_name(self) -> pulumi.Output[Optional[str]]:
         return pulumi.get(self, "asset_name")
 
@@ -245,7 +245,7 @@ class GitHubRelease(pulumi.CustomResource):
         return pulumi.get(self, "executable")
 
     @property
-    @pulumi.getter
+    @pulumi.getter(name="installCommands")
     def install_commands(self) -> pulumi.Output[Optional[Sequence[str]]]:
         return pulumi.get(self, "install_commands")
 
@@ -260,7 +260,7 @@ class GitHubRelease(pulumi.CustomResource):
         return pulumi.get(self, "org")
 
     @property
-    @pulumi.getter
+    @pulumi.getter(name="releaseVersion")
     def release_version(self) -> pulumi.Output[Optional[str]]:
         return pulumi.get(self, "release_version")
 
@@ -270,12 +270,12 @@ class GitHubRelease(pulumi.CustomResource):
         return pulumi.get(self, "repo")
 
     @property
-    @pulumi.getter
+    @pulumi.getter(name="uninstallCommands")
     def uninstall_commands(self) -> pulumi.Output[Optional[Sequence[str]]]:
         return pulumi.get(self, "uninstall_commands")
 
     @property
-    @pulumi.getter
+    @pulumi.getter(name="updateCommands")
     def update_commands(self) -> pulumi.Output[Optional[Sequence[str]]]:
         return pulumi.get(self, "update_commands")
 

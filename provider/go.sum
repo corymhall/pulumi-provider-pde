@@ -131,6 +131,8 @@ github.com/pulumi/pulumi-command/provider v0.0.0-20230825001433-7b2c8a8ce8f0 h1:
 github.com/pulumi/pulumi-command/provider v0.0.0-20230825001433-7b2c8a8ce8f0/go.mod h1:5GKP/Pyr31f983WjYmKW+6jRD4xNLkv7iEbiKU8y2Yg=
 github.com/pulumi/pulumi-go-provider v0.11.1 h1:htCTrWwTKf3r+vgSpgQhQOCYEs14zqUeHJdcpUS8UAE=
 github.com/pulumi/pulumi-go-provider v0.11.1/go.mod h1:6yOfJ+g5JkflllURGekK7lncGBaLLbSuwAfHpuTD+E4=
+github.com/pulumi/pulumi-go-provider/integration v0.10.0 h1:GHesnrrvkboSjkZpC+qRwjkXBp5d+fSXqlIO92zQxvc=
+github.com/pulumi/pulumi-go-provider/integration v0.10.0/go.mod h1:qAbKHpPzANFKOyjiQ0CzdgJh4DtM0gtujKhO7+l3/+w=
 github.com/pulumi/pulumi/pkg/v3 v3.78.1 h1:5uLCVwaIToa7knWNpt33JGySkBsGEzzR+N6YXJxuNUU=
 github.com/pulumi/pulumi/pkg/v3 v3.78.1/go.mod h1:4/0nD+7QHgUAPwypZ0RqGNuQmGSXHPbaUmsTU/U/Mzc=
 github.com/pulumi/pulumi/sdk/v3 v3.78.1 h1:itSfMcILvEq5wOpGEAzeZdpH973yJ4sRn02nx5SCJHM=

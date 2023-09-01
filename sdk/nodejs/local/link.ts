@@ -31,7 +31,7 @@ export class Link extends pulumi.CustomResource {
         return obj['__pulumiType'] === Link.__pulumiType;
     }
 
-    public /*out*/ readonly is_dir!: pulumi.Output<boolean>;
+    public /*out*/ readonly isDir!: pulumi.Output<boolean>;
     public /*out*/ readonly linked!: pulumi.Output<boolean>;
     public readonly overwrite!: pulumi.Output<boolean | undefined>;
     public readonly recursive!: pulumi.Output<boolean | undefined>;
@@ -62,11 +62,11 @@ export class Link extends pulumi.CustomResource {
             resourceInputs["retain"] = args ? args.retain : undefined;
             resourceInputs["source"] = args ? args.source : undefined;
             resourceInputs["target"] = args ? args.target : undefined;
-            resourceInputs["is_dir"] = undefined /*out*/;
+            resourceInputs["isDir"] = undefined /*out*/;
             resourceInputs["linked"] = undefined /*out*/;
             resourceInputs["targets"] = undefined /*out*/;
         } else {
-            resourceInputs["is_dir"] = undefined /*out*/;
+            resourceInputs["isDir"] = undefined /*out*/;
             resourceInputs["linked"] = undefined /*out*/;
             resourceInputs["overwrite"] = undefined /*out*/;
             resourceInputs["recursive"] = undefined /*out*/;

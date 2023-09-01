@@ -31,17 +31,17 @@ export class GitHubRelease extends pulumi.CustomResource {
         return obj['__pulumiType'] === GitHubRelease.__pulumiType;
     }
 
-    public readonly asset_name!: pulumi.Output<string | undefined>;
+    public readonly assetName!: pulumi.Output<string | undefined>;
     public /*out*/ readonly download_url!: pulumi.Output<string>;
     public /*out*/ readonly environment!: pulumi.Output<{[key: string]: string} | undefined>;
     public readonly executable!: pulumi.Output<string | undefined>;
-    public readonly install_commands!: pulumi.Output<string[] | undefined>;
+    public readonly installCommands!: pulumi.Output<string[] | undefined>;
     public /*out*/ readonly interpreter!: pulumi.Output<string[]>;
     public readonly org!: pulumi.Output<string>;
-    public readonly release_version!: pulumi.Output<string | undefined>;
+    public readonly releaseVersion!: pulumi.Output<string | undefined>;
     public readonly repo!: pulumi.Output<string>;
-    public readonly uninstall_commands!: pulumi.Output<string[] | undefined>;
-    public readonly update_commands!: pulumi.Output<string[] | undefined>;
+    public readonly uninstallCommands!: pulumi.Output<string[] | undefined>;
+    public readonly updateCommands!: pulumi.Output<string[] | undefined>;
     public /*out*/ readonly version!: pulumi.Output<string>;
 
     /**
@@ -61,30 +61,30 @@ export class GitHubRelease extends pulumi.CustomResource {
             if ((!args || args.repo === undefined) && !opts.urn) {
                 throw new Error("Missing required property 'repo'");
             }
-            resourceInputs["asset_name"] = args ? args.asset_name : undefined;
+            resourceInputs["assetName"] = args ? args.assetName : undefined;
             resourceInputs["executable"] = args ? args.executable : undefined;
-            resourceInputs["install_commands"] = args ? args.install_commands : undefined;
+            resourceInputs["installCommands"] = args ? args.installCommands : undefined;
             resourceInputs["org"] = args ? args.org : undefined;
-            resourceInputs["release_version"] = args ? args.release_version : undefined;
+            resourceInputs["releaseVersion"] = args ? args.releaseVersion : undefined;
             resourceInputs["repo"] = args ? args.repo : undefined;
-            resourceInputs["uninstall_commands"] = args ? args.uninstall_commands : undefined;
-            resourceInputs["update_commands"] = args ? args.update_commands : undefined;
+            resourceInputs["uninstallCommands"] = args ? args.uninstallCommands : undefined;
+            resourceInputs["updateCommands"] = args ? args.updateCommands : undefined;
             resourceInputs["download_url"] = undefined /*out*/;
             resourceInputs["environment"] = undefined /*out*/;
             resourceInputs["interpreter"] = undefined /*out*/;
             resourceInputs["version"] = undefined /*out*/;
         } else {
-            resourceInputs["asset_name"] = undefined /*out*/;
+            resourceInputs["assetName"] = undefined /*out*/;
             resourceInputs["download_url"] = undefined /*out*/;
             resourceInputs["environment"] = undefined /*out*/;
             resourceInputs["executable"] = undefined /*out*/;
-            resourceInputs["install_commands"] = undefined /*out*/;
+            resourceInputs["installCommands"] = undefined /*out*/;
             resourceInputs["interpreter"] = undefined /*out*/;
             resourceInputs["org"] = undefined /*out*/;
-            resourceInputs["release_version"] = undefined /*out*/;
+            resourceInputs["releaseVersion"] = undefined /*out*/;
             resourceInputs["repo"] = undefined /*out*/;
-            resourceInputs["uninstall_commands"] = undefined /*out*/;
-            resourceInputs["update_commands"] = undefined /*out*/;
+            resourceInputs["uninstallCommands"] = undefined /*out*/;
+            resourceInputs["updateCommands"] = undefined /*out*/;
             resourceInputs["version"] = undefined /*out*/;
         }
         opts = pulumi.mergeOptions(utilities.resourceOptsDefaults(), opts);
@@ -96,12 +96,12 @@ export class GitHubRelease extends pulumi.CustomResource {
  * The set of arguments for constructing a GitHubRelease resource.
  */
 export interface GitHubReleaseArgs {
-    asset_name?: pulumi.Input<string>;
+    assetName?: pulumi.Input<string>;
     executable?: pulumi.Input<string>;
-    install_commands?: pulumi.Input<pulumi.Input<string>[]>;
+    installCommands?: pulumi.Input<pulumi.Input<string>[]>;
     org: pulumi.Input<string>;
-    release_version?: pulumi.Input<string>;
+    releaseVersion?: pulumi.Input<string>;
     repo: pulumi.Input<string>;
-    uninstall_commands?: pulumi.Input<pulumi.Input<string>[]>;
-    update_commands?: pulumi.Input<pulumi.Input<string>[]>;
+    uninstallCommands?: pulumi.Input<pulumi.Input<string>[]>;
+    updateCommands?: pulumi.Input<pulumi.Input<string>[]>;
 }

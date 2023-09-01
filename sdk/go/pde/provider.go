@@ -7,8 +7,8 @@ import (
 	"context"
 	"reflect"
 
+	"github.com/corymhall/pulumi-provider-pde/sdk/go/pde/internal"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"internal"
 )
 
 type Provider struct {

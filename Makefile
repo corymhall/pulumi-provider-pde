@@ -7,9 +7,11 @@ NODE_MODULE_NAME := @corymhall/pde
 NUGET_PKG_NAME   := Corymhall.pde
 
 PROVIDER        := pulumi-resource-${PACK}
+CODEGEN         := pulumi-gen-${PACK}
 VERSION         ?= $(shell pulumictl get version)
 PROVIDER_PATH   := provider
 VERSION_PATH     := ${PROVIDER_PATH}/cmd/main.Version
+SCHEMA_FILE     := provider/cmd/pulumi-resource-pde/schema.json
 
 GOPATH			:= $(shell go env GOPATH)
 
@@ -19,7 +21,13 @@ TESTPARALLELISM := 4
 ensure::
 	cd provider && go mod tidy
 	cd sdk && go mod tidy
-	cd tests && go mod tidy
+	cd provider/tests && go mod tidy
+	cd examples/simple-go && go mod tidy
+
+codegen::
+	(cd provider && VERSION=${VERSION} go generate cmd/${PROVIDER}/main.go)
+	(cd provider && go build -o $(WORKING_DIR)/bin/${CODEGEN} -ldflags "-X ${PROJECT}/${VERSION_PATH}=${VERSION}" ${PROJECT}/${PROVIDER_PATH}/cmd/$(CODEGEN))
+	$(WORKING_DIR)/bin/${CODEGEN} $(SCHEMA_FILE) --version ${VERSION}
 
 provider::
 	(cd provider && go build -o $(WORKING_DIR)/bin/${PROVIDER} -ldflags "-X ${PROJECT}/${VERSION_PATH}=${VERSION}" $(PROJECT)/${PROVIDER_PATH}/cmd/$(PROVIDER))
@@ -40,7 +48,7 @@ dotnet_sdk::
 
 go_sdk:: $(WORKING_DIR)/bin/$(PROVIDER)
 	rm -rf sdk/go
-	pulumi package gen-sdk $(WORKING_DIR)/bin/$(PROVIDER) --language go
+	pulumi package gen-sdk --language go $(SCHEMA_FILE)
 
 nodejs_sdk:: VERSION := $(shell pulumictl get version --language javascript)
 nodejs_sdk::
@@ -67,10 +75,13 @@ python_sdk::
 		cd ./bin && python3 setup.py build sdist
 
 .PHONY: build
-build:: provider dotnet_sdk go_sdk nodejs_sdk python_sdk
+build:: provider build_sdks
 
 # Required for the codegen action that runs in pulumi/pulumi
 only_build:: build
+
+.PHONY: build_sdks
+build_sdks: codegen dotnet_sdk go_sdk nodejs_sdk python_sdk
 
 lint::
 	for DIR in "provider" "sdk" "tests" ; do \

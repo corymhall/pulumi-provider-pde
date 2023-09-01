@@ -3,9 +3,11 @@ module github.com/corymhall/pulumi-provider-pde/provider
 go 1.20
 
 require (
+	github.com/blang/semver v3.5.1+incompatible
 	github.com/google/go-github/v54 v54.0.0
 	github.com/pulumi/pulumi-command/provider v0.0.0-20230825001433-7b2c8a8ce8f0
 	github.com/pulumi/pulumi-go-provider v0.11.1
+	github.com/pulumi/pulumi-go-provider/integration v0.10.0
 	github.com/pulumi/pulumi/sdk/v3 v3.78.1
 )
 
@@ -16,9 +18,9 @@ require (
 	github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
-	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/cheggaaa/pb v1.0.29 // indirect
 	github.com/cloudflare/circl v1.3.3 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/djherbis/times v1.5.0 // indirect
 	github.com/edsrzf/mmap-go v1.1.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
@@ -47,6 +49,7 @@ require (
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pkg/term v1.1.0 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/pulumi/pulumi/pkg/v3 v3.78.1 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect

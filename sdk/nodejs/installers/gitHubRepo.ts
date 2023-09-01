@@ -31,16 +31,16 @@ export class GitHubRepo extends pulumi.CustomResource {
         return obj['__pulumiType'] === GitHubRepo.__pulumiType;
     }
 
-    public /*out*/ readonly abs_folder_name!: pulumi.Output<string>;
+    public /*out*/ readonly absFolderName!: pulumi.Output<string>;
     public readonly branch!: pulumi.Output<string | undefined>;
     public /*out*/ readonly environment!: pulumi.Output<{[key: string]: string} | undefined>;
-    public readonly folder_name!: pulumi.Output<string | undefined>;
-    public readonly install_commands!: pulumi.Output<string[] | undefined>;
+    public readonly folderName!: pulumi.Output<string | undefined>;
+    public readonly installCommands!: pulumi.Output<string[] | undefined>;
     public /*out*/ readonly interpreter!: pulumi.Output<string[]>;
     public readonly org!: pulumi.Output<string>;
     public readonly repo!: pulumi.Output<string>;
-    public readonly uninstall_commands!: pulumi.Output<string[] | undefined>;
-    public readonly update_commands!: pulumi.Output<string[] | undefined>;
+    public readonly uninstallCommands!: pulumi.Output<string[] | undefined>;
+    public readonly updateCommands!: pulumi.Output<string[] | undefined>;
     public /*out*/ readonly version!: pulumi.Output<string>;
 
     /**
@@ -61,27 +61,27 @@ export class GitHubRepo extends pulumi.CustomResource {
                 throw new Error("Missing required property 'repo'");
             }
             resourceInputs["branch"] = args ? args.branch : undefined;
-            resourceInputs["folder_name"] = args ? args.folder_name : undefined;
-            resourceInputs["install_commands"] = args ? args.install_commands : undefined;
+            resourceInputs["folderName"] = args ? args.folderName : undefined;
+            resourceInputs["installCommands"] = args ? args.installCommands : undefined;
             resourceInputs["org"] = args ? args.org : undefined;
             resourceInputs["repo"] = args ? args.repo : undefined;
-            resourceInputs["uninstall_commands"] = args ? args.uninstall_commands : undefined;
-            resourceInputs["update_commands"] = args ? args.update_commands : undefined;
-            resourceInputs["abs_folder_name"] = undefined /*out*/;
+            resourceInputs["uninstallCommands"] = args ? args.uninstallCommands : undefined;
+            resourceInputs["updateCommands"] = args ? args.updateCommands : undefined;
+            resourceInputs["absFolderName"] = undefined /*out*/;
             resourceInputs["environment"] = undefined /*out*/;
             resourceInputs["interpreter"] = undefined /*out*/;
             resourceInputs["version"] = undefined /*out*/;
         } else {
-            resourceInputs["abs_folder_name"] = undefined /*out*/;
+            resourceInputs["absFolderName"] = undefined /*out*/;
             resourceInputs["branch"] = undefined /*out*/;
             resourceInputs["environment"] = undefined /*out*/;
-            resourceInputs["folder_name"] = undefined /*out*/;
-            resourceInputs["install_commands"] = undefined /*out*/;
+            resourceInputs["folderName"] = undefined /*out*/;
+            resourceInputs["installCommands"] = undefined /*out*/;
             resourceInputs["interpreter"] = undefined /*out*/;
             resourceInputs["org"] = undefined /*out*/;
             resourceInputs["repo"] = undefined /*out*/;
-            resourceInputs["uninstall_commands"] = undefined /*out*/;
-            resourceInputs["update_commands"] = undefined /*out*/;
+            resourceInputs["uninstallCommands"] = undefined /*out*/;
+            resourceInputs["updateCommands"] = undefined /*out*/;
             resourceInputs["version"] = undefined /*out*/;
         }
         opts = pulumi.mergeOptions(utilities.resourceOptsDefaults(), opts);
@@ -94,10 +94,10 @@ export class GitHubRepo extends pulumi.CustomResource {
  */
 export interface GitHubRepoArgs {
     branch?: pulumi.Input<string>;
-    folder_name?: pulumi.Input<string>;
-    install_commands?: pulumi.Input<pulumi.Input<string>[]>;
+    folderName?: pulumi.Input<string>;
+    installCommands?: pulumi.Input<pulumi.Input<string>[]>;
     org: pulumi.Input<string>;
     repo: pulumi.Input<string>;
-    uninstall_commands?: pulumi.Input<pulumi.Input<string>[]>;
-    update_commands?: pulumi.Input<pulumi.Input<string>[]>;
+    uninstallCommands?: pulumi.Input<pulumi.Input<string>[]>;
+    updateCommands?: pulumi.Input<pulumi.Input<string>[]>;
 }

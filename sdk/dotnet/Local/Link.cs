@@ -12,8 +12,8 @@ namespace Pulumi.Pde.Local
     [PdeResourceType("pde:local:Link")]
     public partial class Link : global::Pulumi.CustomResource
     {
-        [Output("is_dir")]
-        public Output<bool> Is_dir { get; private set; } = null!;
+        [Output("isDir")]
+        public Output<bool> IsDir { get; private set; } = null!;
 
         [Output("linked")]
         public Output<bool> Linked { get; private set; } = null!;

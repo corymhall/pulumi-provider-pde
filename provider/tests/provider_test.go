@@ -43,7 +43,7 @@ func defaultState(fromFile, toFile string, makeComputed bool, overwrites resourc
 			V: []resource.PropertyValue{{V: toFile}},
 		},
 		"linked":    resource.PropertyValue{V: true},
-		"is_dir":    resource.PropertyValue{V: false},
+		"isDir":     resource.PropertyValue{V: false},
 		"overwrite": resource.PropertyValue{V: false},
 	}
 	if makeComputed {

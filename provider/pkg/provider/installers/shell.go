@@ -25,11 +25,11 @@ var _ = (infer.CustomCheck[ShellInputs])((*Shell)(nil))
 type ShellInputs struct {
 	BaseInputs
 	CommandInputs
-	VersionCommand  *string   `pulumi:"version_command"`
-	InstallCommands *[]string `pulumi:"install_commands"`
-	ProgramName     *string   `pulumi:"program_name"`
-	DownloadUrl     *string   `pulumi:"download_url"`
-	BinLocation     *string   `pulumi:"bin_location,optional"`
+	VersionCommand  *string   `pulumi:"versionCommand"`
+	InstallCommands *[]string `pulumi:"installCommands"`
+	ProgramName     *string   `pulumi:"programName"`
+	DownloadUrl     *string   `pulumi:"downloadUrl"`
+	BinLocation     *string   `pulumi:"binLocation,optional"`
 	Executable      *bool     `pulumi:"executable,optional"`
 }
 

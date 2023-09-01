@@ -1,0 +1,270 @@
+{
+    "config": {},
+    "description": "The pulumi pde provider...",
+    "displayName": "pde",
+    "language": {
+        "go": {
+            "generateResourceContainerTypes": true,
+            "importBasePath": "github.com/corymhall/pulumi-provider-pde/sdk/go/pde"
+        }
+    },
+    "name": "pde",
+    "provider": {},
+    "resources": {
+        "pde:installers:GitHubRelease": {
+            "inputProperties": {
+                "assetName": {
+                    "type": "string"
+                },
+                "executable": {
+                    "type": "string"
+                },
+                "installCommands": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "org": {
+                    "type": "string"
+                },
+                "releaseVersion": {
+                    "type": "string"
+                },
+                "repo": {
+                    "type": "string"
+                },
+                "uninstallCommands": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "updateCommands": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                }
+            },
+            "properties": {
+                "assetName": {
+                    "type": "string"
+                },
+                "download_url": {
+                    "type": "string"
+                },
+                "environment": {
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "type": "object"
+                },
+                "executable": {
+                    "type": "string"
+                },
+                "installCommands": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "interpreter": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "org": {
+                    "type": "string"
+                },
+                "releaseVersion": {
+                    "type": "string"
+                },
+                "repo": {
+                    "type": "string"
+                },
+                "uninstallCommands": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "updateCommands": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "org",
+                "repo",
+                "interpreter",
+                "version",
+                "download_url"
+            ],
+            "requiredInputs": [
+                "org",
+                "repo"
+            ]
+        },
+        "pde:installers:GitHubRepo": {
+            "inputProperties": {
+                "branch": {
+                    "type": "string"
+                },
+                "folderName": {
+                    "type": "string"
+                },
+                "installCommands": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "org": {
+                    "type": "string"
+                },
+                "repo": {
+                    "type": "string"
+                },
+                "uninstallCommands": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "updateCommands": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                }
+            },
+            "properties": {
+                "absFolderName": {
+                    "type": "string"
+                },
+                "branch": {
+                    "type": "string"
+                },
+                "environment": {
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "type": "object"
+                },
+                "folderName": {
+                    "type": "string"
+                },
+                "installCommands": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "interpreter": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "org": {
+                    "type": "string"
+                },
+                "repo": {
+                    "type": "string"
+                },
+                "uninstallCommands": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "updateCommands": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "interpreter",
+                "org",
+                "repo",
+                "version",
+                "absFolderName"
+            ],
+            "requiredInputs": [
+                "org",
+                "repo"
+            ]
+        },
+        "pde:local:Link": {
+            "inputProperties": {
+                "overwrite": {
+                    "type": "boolean"
+                },
+                "recursive": {
+                    "type": "boolean"
+                },
+                "retain": {
+                    "type": "boolean"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "target": {
+                    "type": "string"
+                }
+            },
+            "properties": {
+                "isDir": {
+                    "type": "boolean"
+                },
+                "linked": {
+                    "type": "boolean"
+                },
+                "overwrite": {
+                    "type": "boolean"
+                },
+                "recursive": {
+                    "type": "boolean"
+                },
+                "retain": {
+                    "type": "boolean"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "target": {
+                    "type": "string"
+                },
+                "targets": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "source",
+                "target",
+                "linked",
+                "isDir",
+                "targets"
+            ],
+            "requiredInputs": [
+                "source",
+                "target"
+            ]
+        }
+    }
+}

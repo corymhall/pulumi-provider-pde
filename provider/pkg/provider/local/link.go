@@ -49,7 +49,7 @@ type LinkState struct {
 	// It is generally a good idea to embed args in outputs, but it isn't strictly necessary.
 	LinkArgs
 	Linked  *bool     `pulumi:"linked"`
-	IsDir   *bool     `pulumi:"is_dir"`
+	IsDir   *bool     `pulumi:"isDir"`
 	Targets *[]string `pulumi:"targets"`
 }
 

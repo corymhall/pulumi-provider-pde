@@ -12,8 +12,8 @@ namespace Pulumi.Pde.Installers
     [PdeResourceType("pde:installers:GitHubRepo")]
     public partial class GitHubRepo : global::Pulumi.CustomResource
     {
-        [Output("abs_folder_name")]
-        public Output<string> Abs_folder_name { get; private set; } = null!;
+        [Output("absFolderName")]
+        public Output<string> AbsFolderName { get; private set; } = null!;
 
         [Output("branch")]
         public Output<string?> Branch { get; private set; } = null!;
@@ -21,11 +21,11 @@ namespace Pulumi.Pde.Installers
         [Output("environment")]
         public Output<ImmutableDictionary<string, string>?> Environment { get; private set; } = null!;
 
-        [Output("folder_name")]
-        public Output<string?> Folder_name { get; private set; } = null!;
+        [Output("folderName")]
+        public Output<string?> FolderName { get; private set; } = null!;
 
-        [Output("install_commands")]
-        public Output<ImmutableArray<string>> Install_commands { get; private set; } = null!;
+        [Output("installCommands")]
+        public Output<ImmutableArray<string>> InstallCommands { get; private set; } = null!;
 
         [Output("interpreter")]
         public Output<ImmutableArray<string>> Interpreter { get; private set; } = null!;
@@ -36,11 +36,11 @@ namespace Pulumi.Pde.Installers
         [Output("repo")]
         public Output<string> Repo { get; private set; } = null!;
 
-        [Output("uninstall_commands")]
-        public Output<ImmutableArray<string>> Uninstall_commands { get; private set; } = null!;
+        [Output("uninstallCommands")]
+        public Output<ImmutableArray<string>> UninstallCommands { get; private set; } = null!;
 
-        [Output("update_commands")]
-        public Output<ImmutableArray<string>> Update_commands { get; private set; } = null!;
+        [Output("updateCommands")]
+        public Output<ImmutableArray<string>> UpdateCommands { get; private set; } = null!;
 
         [Output("version")]
         public Output<string> Version { get; private set; } = null!;
@@ -93,15 +93,15 @@ namespace Pulumi.Pde.Installers
         [Input("branch")]
         public Input<string>? Branch { get; set; }
 
-        [Input("folder_name")]
-        public Input<string>? Folder_name { get; set; }
+        [Input("folderName")]
+        public Input<string>? FolderName { get; set; }
 
-        [Input("install_commands")]
-        private InputList<string>? _install_commands;
-        public InputList<string> Install_commands
+        [Input("installCommands")]
+        private InputList<string>? _installCommands;
+        public InputList<string> InstallCommands
         {
-            get => _install_commands ?? (_install_commands = new InputList<string>());
-            set => _install_commands = value;
+            get => _installCommands ?? (_installCommands = new InputList<string>());
+            set => _installCommands = value;
         }
 
         [Input("org", required: true)]
@@ -110,20 +110,20 @@ namespace Pulumi.Pde.Installers
         [Input("repo", required: true)]
         public Input<string> Repo { get; set; } = null!;
 
-        [Input("uninstall_commands")]
-        private InputList<string>? _uninstall_commands;
-        public InputList<string> Uninstall_commands
+        [Input("uninstallCommands")]
+        private InputList<string>? _uninstallCommands;
+        public InputList<string> UninstallCommands
         {
-            get => _uninstall_commands ?? (_uninstall_commands = new InputList<string>());
-            set => _uninstall_commands = value;
+            get => _uninstallCommands ?? (_uninstallCommands = new InputList<string>());
+            set => _uninstallCommands = value;
         }
 
-        [Input("update_commands")]
-        private InputList<string>? _update_commands;
-        public InputList<string> Update_commands
+        [Input("updateCommands")]
+        private InputList<string>? _updateCommands;
+        public InputList<string> UpdateCommands
         {
-            get => _update_commands ?? (_update_commands = new InputList<string>());
-            set => _update_commands = value;
+            get => _updateCommands ?? (_updateCommands = new InputList<string>());
+            set => _updateCommands = value;
         }
 
         public GitHubRepoArgs()

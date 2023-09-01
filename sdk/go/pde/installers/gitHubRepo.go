@@ -8,24 +8,24 @@ import (
 	"reflect"
 
 	"errors"
+	"github.com/corymhall/pulumi-provider-pde/sdk/go/pde/internal"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"internal"
 )
 
 type GitHubRepo struct {
 	pulumi.CustomResourceState
 
-	Abs_folder_name    pulumi.StringOutput      `pulumi:"abs_folder_name"`
-	Branch             pulumi.StringPtrOutput   `pulumi:"branch"`
-	Environment        pulumi.StringMapOutput   `pulumi:"environment"`
-	Folder_name        pulumi.StringPtrOutput   `pulumi:"folder_name"`
-	Install_commands   pulumi.StringArrayOutput `pulumi:"install_commands"`
-	Interpreter        pulumi.StringArrayOutput `pulumi:"interpreter"`
-	Org                pulumi.StringOutput      `pulumi:"org"`
-	Repo               pulumi.StringOutput      `pulumi:"repo"`
-	Uninstall_commands pulumi.StringArrayOutput `pulumi:"uninstall_commands"`
-	Update_commands    pulumi.StringArrayOutput `pulumi:"update_commands"`
-	Version            pulumi.StringOutput      `pulumi:"version"`
+	AbsFolderName     pulumi.StringOutput      `pulumi:"absFolderName"`
+	Branch            pulumi.StringPtrOutput   `pulumi:"branch"`
+	Environment       pulumi.StringMapOutput   `pulumi:"environment"`
+	FolderName        pulumi.StringPtrOutput   `pulumi:"folderName"`
+	InstallCommands   pulumi.StringArrayOutput `pulumi:"installCommands"`
+	Interpreter       pulumi.StringArrayOutput `pulumi:"interpreter"`
+	Org               pulumi.StringOutput      `pulumi:"org"`
+	Repo              pulumi.StringOutput      `pulumi:"repo"`
+	UninstallCommands pulumi.StringArrayOutput `pulumi:"uninstallCommands"`
+	UpdateCommands    pulumi.StringArrayOutput `pulumi:"updateCommands"`
+	Version           pulumi.StringOutput      `pulumi:"version"`
 }
 
 // NewGitHubRepo registers a new resource with the given unique name, arguments, and options.
@@ -74,24 +74,24 @@ func (GitHubRepoState) ElementType() reflect.Type {
 }
 
 type gitHubRepoArgs struct {
-	Branch             *string  `pulumi:"branch"`
-	Folder_name        *string  `pulumi:"folder_name"`
-	Install_commands   []string `pulumi:"install_commands"`
-	Org                string   `pulumi:"org"`
-	Repo               string   `pulumi:"repo"`
-	Uninstall_commands []string `pulumi:"uninstall_commands"`
-	Update_commands    []string `pulumi:"update_commands"`
+	Branch            *string  `pulumi:"branch"`
+	FolderName        *string  `pulumi:"folderName"`
+	InstallCommands   []string `pulumi:"installCommands"`
+	Org               string   `pulumi:"org"`
+	Repo              string   `pulumi:"repo"`
+	UninstallCommands []string `pulumi:"uninstallCommands"`
+	UpdateCommands    []string `pulumi:"updateCommands"`
 }
 
 // The set of arguments for constructing a GitHubRepo resource.
 type GitHubRepoArgs struct {
-	Branch             pulumi.StringPtrInput
-	Folder_name        pulumi.StringPtrInput
-	Install_commands   pulumi.StringArrayInput
-	Org                pulumi.StringInput
-	Repo               pulumi.StringInput
-	Uninstall_commands pulumi.StringArrayInput
-	Update_commands    pulumi.StringArrayInput
+	Branch            pulumi.StringPtrInput
+	FolderName        pulumi.StringPtrInput
+	InstallCommands   pulumi.StringArrayInput
+	Org               pulumi.StringInput
+	Repo              pulumi.StringInput
+	UninstallCommands pulumi.StringArrayInput
+	UpdateCommands    pulumi.StringArrayInput
 }
 
 func (GitHubRepoArgs) ElementType() reflect.Type {
@@ -117,6 +117,56 @@ func (i *GitHubRepo) ToGitHubRepoOutputWithContext(ctx context.Context) GitHubRe
 	return pulumi.ToOutputWithContext(ctx, i).(GitHubRepoOutput)
 }
 
+// GitHubRepoArrayInput is an input type that accepts GitHubRepoArray and GitHubRepoArrayOutput values.
+// You can construct a concrete instance of `GitHubRepoArrayInput` via:
+//
+//	GitHubRepoArray{ GitHubRepoArgs{...} }
+type GitHubRepoArrayInput interface {
+	pulumi.Input
+
+	ToGitHubRepoArrayOutput() GitHubRepoArrayOutput
+	ToGitHubRepoArrayOutputWithContext(context.Context) GitHubRepoArrayOutput
+}
+
+type GitHubRepoArray []GitHubRepoInput
+
+func (GitHubRepoArray) ElementType() reflect.Type {
+	return reflect.TypeOf((*[]*GitHubRepo)(nil)).Elem()
+}
+
+func (i GitHubRepoArray) ToGitHubRepoArrayOutput() GitHubRepoArrayOutput {
+	return i.ToGitHubRepoArrayOutputWithContext(context.Background())
+}
+
+func (i GitHubRepoArray) ToGitHubRepoArrayOutputWithContext(ctx context.Context) GitHubRepoArrayOutput {
+	return pulumi.ToOutputWithContext(ctx, i).(GitHubRepoArrayOutput)
+}
+
+// GitHubRepoMapInput is an input type that accepts GitHubRepoMap and GitHubRepoMapOutput values.
+// You can construct a concrete instance of `GitHubRepoMapInput` via:
+//
+//	GitHubRepoMap{ "key": GitHubRepoArgs{...} }
+type GitHubRepoMapInput interface {
+	pulumi.Input
+
+	ToGitHubRepoMapOutput() GitHubRepoMapOutput
+	ToGitHubRepoMapOutputWithContext(context.Context) GitHubRepoMapOutput
+}
+
+type GitHubRepoMap map[string]GitHubRepoInput
+
+func (GitHubRepoMap) ElementType() reflect.Type {
+	return reflect.TypeOf((*map[string]*GitHubRepo)(nil)).Elem()
+}
+
+func (i GitHubRepoMap) ToGitHubRepoMapOutput() GitHubRepoMapOutput {
+	return i.ToGitHubRepoMapOutputWithContext(context.Background())
+}
+
+func (i GitHubRepoMap) ToGitHubRepoMapOutputWithContext(ctx context.Context) GitHubRepoMapOutput {
+	return pulumi.ToOutputWithContext(ctx, i).(GitHubRepoMapOutput)
+}
+
 type GitHubRepoOutput struct{ *pulumi.OutputState }
 
 func (GitHubRepoOutput) ElementType() reflect.Type {
@@ -131,8 +181,8 @@ func (o GitHubRepoOutput) ToGitHubRepoOutputWithContext(ctx context.Context) Git
 	return o
 }
 
-func (o GitHubRepoOutput) Abs_folder_name() pulumi.StringOutput {
-	return o.ApplyT(func(v *GitHubRepo) pulumi.StringOutput { return v.Abs_folder_name }).(pulumi.StringOutput)
+func (o GitHubRepoOutput) AbsFolderName() pulumi.StringOutput {
+	return o.ApplyT(func(v *GitHubRepo) pulumi.StringOutput { return v.AbsFolderName }).(pulumi.StringOutput)
 }
 
 func (o GitHubRepoOutput) Branch() pulumi.StringPtrOutput {
@@ -143,12 +193,12 @@ func (o GitHubRepoOutput) Environment() pulumi.StringMapOutput {
 	return o.ApplyT(func(v *GitHubRepo) pulumi.StringMapOutput { return v.Environment }).(pulumi.StringMapOutput)
 }
 
-func (o GitHubRepoOutput) Folder_name() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v *GitHubRepo) pulumi.StringPtrOutput { return v.Folder_name }).(pulumi.StringPtrOutput)
+func (o GitHubRepoOutput) FolderName() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *GitHubRepo) pulumi.StringPtrOutput { return v.FolderName }).(pulumi.StringPtrOutput)
 }
 
-func (o GitHubRepoOutput) Install_commands() pulumi.StringArrayOutput {
-	return o.ApplyT(func(v *GitHubRepo) pulumi.StringArrayOutput { return v.Install_commands }).(pulumi.StringArrayOutput)
+func (o GitHubRepoOutput) InstallCommands() pulumi.StringArrayOutput {
+	return o.ApplyT(func(v *GitHubRepo) pulumi.StringArrayOutput { return v.InstallCommands }).(pulumi.StringArrayOutput)
 }
 
 func (o GitHubRepoOutput) Interpreter() pulumi.StringArrayOutput {
@@ -163,19 +213,63 @@ func (o GitHubRepoOutput) Repo() pulumi.StringOutput {
 	return o.ApplyT(func(v *GitHubRepo) pulumi.StringOutput { return v.Repo }).(pulumi.StringOutput)
 }
 
-func (o GitHubRepoOutput) Uninstall_commands() pulumi.StringArrayOutput {
-	return o.ApplyT(func(v *GitHubRepo) pulumi.StringArrayOutput { return v.Uninstall_commands }).(pulumi.StringArrayOutput)
+func (o GitHubRepoOutput) UninstallCommands() pulumi.StringArrayOutput {
+	return o.ApplyT(func(v *GitHubRepo) pulumi.StringArrayOutput { return v.UninstallCommands }).(pulumi.StringArrayOutput)
 }
 
-func (o GitHubRepoOutput) Update_commands() pulumi.StringArrayOutput {
-	return o.ApplyT(func(v *GitHubRepo) pulumi.StringArrayOutput { return v.Update_commands }).(pulumi.StringArrayOutput)
+func (o GitHubRepoOutput) UpdateCommands() pulumi.StringArrayOutput {
+	return o.ApplyT(func(v *GitHubRepo) pulumi.StringArrayOutput { return v.UpdateCommands }).(pulumi.StringArrayOutput)
 }
 
 func (o GitHubRepoOutput) Version() pulumi.StringOutput {
 	return o.ApplyT(func(v *GitHubRepo) pulumi.StringOutput { return v.Version }).(pulumi.StringOutput)
 }
 
+type GitHubRepoArrayOutput struct{ *pulumi.OutputState }
+
+func (GitHubRepoArrayOutput) ElementType() reflect.Type {
+	return reflect.TypeOf((*[]*GitHubRepo)(nil)).Elem()
+}
+
+func (o GitHubRepoArrayOutput) ToGitHubRepoArrayOutput() GitHubRepoArrayOutput {
+	return o
+}
+
+func (o GitHubRepoArrayOutput) ToGitHubRepoArrayOutputWithContext(ctx context.Context) GitHubRepoArrayOutput {
+	return o
+}
+
+func (o GitHubRepoArrayOutput) Index(i pulumi.IntInput) GitHubRepoOutput {
+	return pulumi.All(o, i).ApplyT(func(vs []interface{}) *GitHubRepo {
+		return vs[0].([]*GitHubRepo)[vs[1].(int)]
+	}).(GitHubRepoOutput)
+}
+
+type GitHubRepoMapOutput struct{ *pulumi.OutputState }
+
+func (GitHubRepoMapOutput) ElementType() reflect.Type {
+	return reflect.TypeOf((*map[string]*GitHubRepo)(nil)).Elem()
+}
+
+func (o GitHubRepoMapOutput) ToGitHubRepoMapOutput() GitHubRepoMapOutput {
+	return o
+}
+
+func (o GitHubRepoMapOutput) ToGitHubRepoMapOutputWithContext(ctx context.Context) GitHubRepoMapOutput {
+	return o
+}
+
+func (o GitHubRepoMapOutput) MapIndex(k pulumi.StringInput) GitHubRepoOutput {
+	return pulumi.All(o, k).ApplyT(func(vs []interface{}) *GitHubRepo {
+		return vs[0].(map[string]*GitHubRepo)[vs[1].(string)]
+	}).(GitHubRepoOutput)
+}
+
 func init() {
 	pulumi.RegisterInputType(reflect.TypeOf((*GitHubRepoInput)(nil)).Elem(), &GitHubRepo{})
+	pulumi.RegisterInputType(reflect.TypeOf((*GitHubRepoArrayInput)(nil)).Elem(), GitHubRepoArray{})
+	pulumi.RegisterInputType(reflect.TypeOf((*GitHubRepoMapInput)(nil)).Elem(), GitHubRepoMap{})
 	pulumi.RegisterOutputType(GitHubRepoOutput{})
+	pulumi.RegisterOutputType(GitHubRepoArrayOutput{})
+	pulumi.RegisterOutputType(GitHubRepoMapOutput{})
 }

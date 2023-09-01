@@ -175,7 +175,7 @@ class Link(pulumi.CustomResource):
         return Link(resource_name, opts=opts, __props__=__props__)
 
     @property
-    @pulumi.getter
+    @pulumi.getter(name="isDir")
     def is_dir(self) -> pulumi.Output[bool]:
         return pulumi.get(self, "is_dir")
 

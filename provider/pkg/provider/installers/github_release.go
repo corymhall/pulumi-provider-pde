@@ -21,9 +21,9 @@ import (
 type GitHubRelease struct{}
 
 type GitHubReleaseInputs struct {
-	AssetName      *string `pulumi:"asset_name,optional"`
+	AssetName      *string `pulumi:"assetName,optional"`
 	Executable     *string `pulumi:"executable,optional"`
-	ReleaseVersion *string `pulumi:"release_version,optional"`
+	ReleaseVersion *string `pulumi:"releaseVersion,optional"`
 	GitHubBaseInputs
 }
 

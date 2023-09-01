@@ -1,8 +1,8 @@
 package installers
 
 type BaseInputs struct {
-	UpdateCommands    *[]string `pulumi:"update_commands,optional"`
-	UninstallCommands *[]string `pulumi:"uninstall_commands,optional"`
+	UpdateCommands    *[]string `pulumi:"updateCommands,optional"`
+	UninstallCommands *[]string `pulumi:"uninstallCommands,optional"`
 }
 
 type CommandInputs struct {

@@ -28,7 +28,7 @@ var _ = (infer.CustomCheck[GitHubRepoInputs])((*GitHubRepo)(nil))
 
 type GitHubRepoInputs struct {
 	GitHubBaseInputs
-	FolderName *string `pulumi:"folder_name,optional"`
+	FolderName *string `pulumi:"folderName,optional"`
 	Branch     *string `pulumi:"branch,optional"`
 }
 
@@ -36,7 +36,7 @@ type GitHubRepoOutputs struct {
 	CommandOutputs
 	GitHubRepoInputs
 	BaseOutputs
-	AbsFolderName *string `pulumi:"abs_folder_name"`
+	AbsFolderName *string `pulumi:"absFolderName"`
 }
 
 // All resources must implement Create at a minumum.

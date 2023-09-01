@@ -65,7 +65,7 @@ class GitHubRepoArgs:
         pulumi.set(self, "branch", value)
 
     @property
-    @pulumi.getter
+    @pulumi.getter(name="folderName")
     def folder_name(self) -> Optional[pulumi.Input[str]]:
         return pulumi.get(self, "folder_name")
 
@@ -74,7 +74,7 @@ class GitHubRepoArgs:
         pulumi.set(self, "folder_name", value)
 
     @property
-    @pulumi.getter
+    @pulumi.getter(name="installCommands")
     def install_commands(self) -> Optional[pulumi.Input[Sequence[pulumi.Input[str]]]]:
         return pulumi.get(self, "install_commands")
 
@@ -83,7 +83,7 @@ class GitHubRepoArgs:
         pulumi.set(self, "install_commands", value)
 
     @property
-    @pulumi.getter
+    @pulumi.getter(name="uninstallCommands")
     def uninstall_commands(self) -> Optional[pulumi.Input[Sequence[pulumi.Input[str]]]]:
         return pulumi.get(self, "uninstall_commands")
 
@@ -92,7 +92,7 @@ class GitHubRepoArgs:
         pulumi.set(self, "uninstall_commands", value)
 
     @property
-    @pulumi.getter
+    @pulumi.getter(name="updateCommands")
     def update_commands(self) -> Optional[pulumi.Input[Sequence[pulumi.Input[str]]]]:
         return pulumi.get(self, "update_commands")
 
@@ -209,7 +209,7 @@ class GitHubRepo(pulumi.CustomResource):
         return GitHubRepo(resource_name, opts=opts, __props__=__props__)
 
     @property
-    @pulumi.getter
+    @pulumi.getter(name="absFolderName")
     def abs_folder_name(self) -> pulumi.Output[str]:
         return pulumi.get(self, "abs_folder_name")
 
@@ -224,12 +224,12 @@ class GitHubRepo(pulumi.CustomResource):
         return pulumi.get(self, "environment")
 
     @property
-    @pulumi.getter
+    @pulumi.getter(name="folderName")
     def folder_name(self) -> pulumi.Output[Optional[str]]:
         return pulumi.get(self, "folder_name")
 
     @property
-    @pulumi.getter
+    @pulumi.getter(name="installCommands")
     def install_commands(self) -> pulumi.Output[Optional[Sequence[str]]]:
         return pulumi.get(self, "install_commands")
 
@@ -249,12 +249,12 @@ class GitHubRepo(pulumi.CustomResource):
         return pulumi.get(self, "repo")
 
     @property
-    @pulumi.getter
+    @pulumi.getter(name="uninstallCommands")
     def uninstall_commands(self) -> pulumi.Output[Optional[Sequence[str]]]:
         return pulumi.get(self, "uninstall_commands")
 
     @property
-    @pulumi.getter
+    @pulumi.getter(name="updateCommands")
     def update_commands(self) -> pulumi.Output[Optional[Sequence[str]]]:
         return pulumi.get(self, "update_commands")
 

@@ -1,11 +1,15 @@
 package provider
 
 import (
+	"strings"
+
+	"github.com/blang/semver"
 	"github.com/corymhall/pulumi-provider-pde/provider/pkg/provider/installers"
 	"github.com/corymhall/pulumi-provider-pde/provider/pkg/provider/local"
 
 	p "github.com/pulumi/pulumi-go-provider"
 	"github.com/pulumi/pulumi-go-provider/infer"
+	"github.com/pulumi/pulumi-go-provider/integration"
 	"github.com/pulumi/pulumi-go-provider/middleware/schema"
 )
 
@@ -24,6 +28,12 @@ func NewProvider() p.Provider {
 		Metadata: schema.Metadata{
 			DisplayName: "pde",
 			Description: "The pulumi pde provider...",
+			LanguageMap: map[string]any{
+				"go": map[string]any{
+					"generateResourceContainerTypes": true,
+					"importBasePath":                 "github.com/corymhall/pulumi-provider-pde/sdk/go/pde",
+				},
+			},
 		},
 		Resources: []infer.InferredResource{
 			infer.Resource[*local.Link, local.LinkArgs, local.LinkState](),
@@ -32,4 +42,10 @@ func NewProvider() p.Provider {
 		},
 	})
 
+}
+func Schema(version string) (string, error) {
+	version = strings.TrimPrefix(version, "v")
+	s, err := integration.NewServer(Name, semver.MustParse(version), NewProvider()).
+		GetSchema(p.GetSchemaRequest{})
+	return s.Schema, err
 }
