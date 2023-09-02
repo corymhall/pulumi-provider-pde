@@ -7,7 +7,12 @@ import (
 
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
-		res, err := installers.NewGitHubRepo(ctx, "pulumi-provider-local", &installers.GitHubRepoArgs{})
+		res, err := installers.NewGitHubRepo(ctx, "pulumi-provider-local", &installers.GitHubRepoArgs{
+			Org:  pulumi.String("corymhall"),
+			Repo: pulumi.String("pulumi-provider-local"),
+		})
+		ctx.Export("abspath", res.AbsFolderName)
+		ctx.Export("version", res.Version)
 		return err
 	})
 }

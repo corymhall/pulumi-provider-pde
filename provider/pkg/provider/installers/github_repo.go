@@ -36,6 +36,7 @@ type GitHubRepoOutputs struct {
 	CommandOutputs
 	GitHubRepoInputs
 	BaseOutputs
+	OutputBranch  *string `pulumi:"outputBranch"`
 	AbsFolderName *string `pulumi:"absFolderName"`
 }
 
@@ -45,13 +46,17 @@ func (l *GitHubRepo) Create(ctx p.Context, name string, input GitHubRepoInputs, 
 		GitHubRepoInputs: input,
 	}
 
-	if preview {
-		return name, *state, nil
+	if input.Branch == nil {
+		branch := "main"
+		state.OutputBranch = &branch
 	}
 
-	absPath, err := state.getLocation(ctx, input)
+	absPath, err := state.getLocation(ctx, &input)
 	if err != nil {
 		return "", *state, err
+	}
+	if preview {
+		return name, *state, nil
 	}
 
 	if err = state.clone(ctx, absPath, input); err != nil {
@@ -75,14 +80,13 @@ func (l *GitHubRepo) Create(ctx p.Context, name string, input GitHubRepoInputs, 
 	return name, *state, nil
 }
 
-func (o *GitHubRepoOutputs) getLocation(ctx p.Context, inputs GitHubRepoInputs) (string, error) {
+func (o *GitHubRepoOutputs) getLocation(ctx p.Context, inputs *GitHubRepoInputs) (string, error) {
 	dir, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
 	if inputs.FolderName == nil {
 		inputs.FolderName = inputs.Repo
-	} else {
 	}
 	absPath := path.Join(dir, *inputs.FolderName)
 	_, err = os.Lstat(absPath)
@@ -97,10 +101,6 @@ func (o *GitHubRepoOutputs) getLocation(ctx p.Context, inputs GitHubRepoInputs) 
 }
 
 func (o *GitHubRepoOutputs) clone(ctx p.Context, absPath string, inputs GitHubRepoInputs) error {
-	if o.Branch == nil {
-		branch := "main"
-		o.Branch = &branch
-	}
 
 	command := fmt.Sprintf("git clone -b %s https://github.com/%s/%s %s", *o.Branch, *inputs.Org, *inputs.Repo, *inputs.FolderName)
 
@@ -120,6 +120,10 @@ func (l *GitHubRepo) Read(ctx p.Context, id string, inputs GitHubRepoInputs, sta
 	if err != nil {
 		return "", inputs, state, nil
 	}
+	if inputs.Branch == nil {
+		branch := "main"
+		state.OutputBranch = &branch
+	}
 	version, err := state.run(ctx, versionCmd, *state.AbsFolderName)
 	state.Version = &version
 	return "", inputs, state, nil
@@ -135,11 +139,17 @@ func (l *GitHubRepo) Update(ctx p.Context, name string, olds GitHubRepoOutputs, 
 		GitHubRepoInputs: news,
 		BaseOutputs:      olds.BaseOutputs,
 	}
+	if news.Branch == nil {
+		branch := "main"
+		state.OutputBranch = &branch
+	} else {
+		state.OutputBranch = news.Branch
+	}
 	if preview {
 		return *state, nil
 	}
 
-	absPath, err := state.getLocation(ctx, news)
+	absPath, err := state.getLocation(ctx, &news)
 	if err != nil {
 		return *state, err
 	}

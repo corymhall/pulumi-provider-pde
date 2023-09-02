@@ -22,6 +22,7 @@ type GitHubRepo struct {
 	InstallCommands   pulumi.StringArrayOutput `pulumi:"installCommands"`
 	Interpreter       pulumi.StringArrayOutput `pulumi:"interpreter"`
 	Org               pulumi.StringOutput      `pulumi:"org"`
+	OutputBranch      pulumi.StringOutput      `pulumi:"outputBranch"`
 	Repo              pulumi.StringOutput      `pulumi:"repo"`
 	UninstallCommands pulumi.StringArrayOutput `pulumi:"uninstallCommands"`
 	UpdateCommands    pulumi.StringArrayOutput `pulumi:"updateCommands"`
@@ -207,6 +208,10 @@ func (o GitHubRepoOutput) Interpreter() pulumi.StringArrayOutput {
 
 func (o GitHubRepoOutput) Org() pulumi.StringOutput {
 	return o.ApplyT(func(v *GitHubRepo) pulumi.StringOutput { return v.Org }).(pulumi.StringOutput)
+}
+
+func (o GitHubRepoOutput) OutputBranch() pulumi.StringOutput {
+	return o.ApplyT(func(v *GitHubRepo) pulumi.StringOutput { return v.OutputBranch }).(pulumi.StringOutput)
 }
 
 func (o GitHubRepoOutput) Repo() pulumi.StringOutput {

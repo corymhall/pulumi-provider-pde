@@ -36,7 +36,7 @@ export class GitHubRelease extends pulumi.CustomResource {
     public /*out*/ readonly environment!: pulumi.Output<{[key: string]: string} | undefined>;
     public readonly executable!: pulumi.Output<string | undefined>;
     public readonly installCommands!: pulumi.Output<string[] | undefined>;
-    public /*out*/ readonly interpreter!: pulumi.Output<string[]>;
+    public /*out*/ readonly interpreter!: pulumi.Output<string[] | undefined>;
     public readonly org!: pulumi.Output<string>;
     public readonly releaseVersion!: pulumi.Output<string | undefined>;
     public readonly repo!: pulumi.Output<string>;

@@ -251,7 +251,7 @@ class GitHubRelease(pulumi.CustomResource):
 
     @property
     @pulumi.getter
-    def interpreter(self) -> pulumi.Output[Sequence[str]]:
+    def interpreter(self) -> pulumi.Output[Optional[Sequence[str]]]:
         return pulumi.get(self, "interpreter")
 
     @property

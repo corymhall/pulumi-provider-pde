@@ -36,8 +36,9 @@ export class GitHubRepo extends pulumi.CustomResource {
     public /*out*/ readonly environment!: pulumi.Output<{[key: string]: string} | undefined>;
     public readonly folderName!: pulumi.Output<string | undefined>;
     public readonly installCommands!: pulumi.Output<string[] | undefined>;
-    public /*out*/ readonly interpreter!: pulumi.Output<string[]>;
+    public /*out*/ readonly interpreter!: pulumi.Output<string[] | undefined>;
     public readonly org!: pulumi.Output<string>;
+    public /*out*/ readonly outputBranch!: pulumi.Output<string>;
     public readonly repo!: pulumi.Output<string>;
     public readonly uninstallCommands!: pulumi.Output<string[] | undefined>;
     public readonly updateCommands!: pulumi.Output<string[] | undefined>;
@@ -70,6 +71,7 @@ export class GitHubRepo extends pulumi.CustomResource {
             resourceInputs["absFolderName"] = undefined /*out*/;
             resourceInputs["environment"] = undefined /*out*/;
             resourceInputs["interpreter"] = undefined /*out*/;
+            resourceInputs["outputBranch"] = undefined /*out*/;
             resourceInputs["version"] = undefined /*out*/;
         } else {
             resourceInputs["absFolderName"] = undefined /*out*/;
@@ -79,6 +81,7 @@ export class GitHubRepo extends pulumi.CustomResource {
             resourceInputs["installCommands"] = undefined /*out*/;
             resourceInputs["interpreter"] = undefined /*out*/;
             resourceInputs["org"] = undefined /*out*/;
+            resourceInputs["outputBranch"] = undefined /*out*/;
             resourceInputs["repo"] = undefined /*out*/;
             resourceInputs["uninstallCommands"] = undefined /*out*/;
             resourceInputs["updateCommands"] = undefined /*out*/;

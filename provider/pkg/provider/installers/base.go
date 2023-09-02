@@ -6,7 +6,7 @@ type BaseInputs struct {
 }
 
 type CommandInputs struct {
-	Interpreter *[]string          `pulumi:"interpreter"`
+	Interpreter *[]string          `pulumi:"interpreter,optional"`
 	Environment *map[string]string `pulumi:"environment,optional"`
 }
 

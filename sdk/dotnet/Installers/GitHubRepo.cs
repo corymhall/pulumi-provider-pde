@@ -33,6 +33,9 @@ namespace Pulumi.Pde.Installers
         [Output("org")]
         public Output<string> Org { get; private set; } = null!;
 
+        [Output("outputBranch")]
+        public Output<string> OutputBranch { get; private set; } = null!;
+
         [Output("repo")]
         public Output<string> Repo { get; private set; } = null!;
 

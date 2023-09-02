@@ -103,7 +103,6 @@
             "required": [
                 "org",
                 "repo",
-                "interpreter",
                 "version",
                 "download_url"
             ],
@@ -176,6 +175,9 @@
                 "org": {
                     "type": "string"
                 },
+                "outputBranch": {
+                    "type": "string"
+                },
                 "repo": {
                     "type": "string"
                 },
@@ -196,10 +198,10 @@
                 }
             },
             "required": [
-                "interpreter",
                 "org",
                 "repo",
                 "version",
+                "outputBranch",
                 "absFolderName"
             ],
             "requiredInputs": [
