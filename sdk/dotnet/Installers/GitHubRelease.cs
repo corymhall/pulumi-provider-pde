@@ -15,8 +15,14 @@ namespace Pulumi.Pde.Installers
         [Output("assetName")]
         public Output<string?> AssetName { get; private set; } = null!;
 
-        [Output("download_url")]
-        public Output<string> Download_url { get; private set; } = null!;
+        [Output("binFolder")]
+        public Output<string?> BinFolder { get; private set; } = null!;
+
+        [Output("binLocation")]
+        public Output<string?> BinLocation { get; private set; } = null!;
+
+        [Output("downloadURL")]
+        public Output<string> DownloadURL { get; private set; } = null!;
 
         [Output("environment")]
         public Output<ImmutableDictionary<string, string>?> Environment { get; private set; } = null!;
@@ -30,11 +36,11 @@ namespace Pulumi.Pde.Installers
         [Output("interpreter")]
         public Output<ImmutableArray<string>> Interpreter { get; private set; } = null!;
 
+        [Output("locations")]
+        public Output<ImmutableArray<string>> Locations { get; private set; } = null!;
+
         [Output("org")]
         public Output<string> Org { get; private set; } = null!;
-
-        [Output("releaseVersion")]
-        public Output<string?> ReleaseVersion { get; private set; } = null!;
 
         [Output("repo")]
         public Output<string> Repo { get; private set; } = null!;
@@ -46,7 +52,7 @@ namespace Pulumi.Pde.Installers
         public Output<ImmutableArray<string>> UpdateCommands { get; private set; } = null!;
 
         [Output("version")]
-        public Output<string> Version { get; private set; } = null!;
+        public Output<string?> Version { get; private set; } = null!;
 
 
         /// <summary>
@@ -96,6 +102,12 @@ namespace Pulumi.Pde.Installers
         [Input("assetName")]
         public Input<string>? AssetName { get; set; }
 
+        [Input("binFolder")]
+        public Input<string>? BinFolder { get; set; }
+
+        [Input("binLocation")]
+        public Input<string>? BinLocation { get; set; }
+
         [Input("executable")]
         public Input<string>? Executable { get; set; }
 
@@ -109,9 +121,6 @@ namespace Pulumi.Pde.Installers
 
         [Input("org", required: true)]
         public Input<string> Org { get; set; } = null!;
-
-        [Input("releaseVersion")]
-        public Input<string>? ReleaseVersion { get; set; }
 
         [Input("repo", required: true)]
         public Input<string> Repo { get; set; } = null!;
@@ -131,6 +140,9 @@ namespace Pulumi.Pde.Installers
             get => _updateCommands ?? (_updateCommands = new InputList<string>());
             set => _updateCommands = value;
         }
+
+        [Input("version")]
+        public Input<string>? Version { get; set; }
 
         public GitHubReleaseArgs()
         {

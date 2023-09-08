@@ -10,6 +10,7 @@ import (
 	"errors"
 	"github.com/corymhall/pulumi-provider-pde/sdk/go/pde/internal"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"github.com/pulumi/pulumi/sdk/v3/go/pulumix"
 )
 
 type GitHubRepo struct {
@@ -22,7 +23,6 @@ type GitHubRepo struct {
 	InstallCommands   pulumi.StringArrayOutput `pulumi:"installCommands"`
 	Interpreter       pulumi.StringArrayOutput `pulumi:"interpreter"`
 	Org               pulumi.StringOutput      `pulumi:"org"`
-	OutputBranch      pulumi.StringOutput      `pulumi:"outputBranch"`
 	Repo              pulumi.StringOutput      `pulumi:"repo"`
 	UninstallCommands pulumi.StringArrayOutput `pulumi:"uninstallCommands"`
 	UpdateCommands    pulumi.StringArrayOutput `pulumi:"updateCommands"`
@@ -118,6 +118,12 @@ func (i *GitHubRepo) ToGitHubRepoOutputWithContext(ctx context.Context) GitHubRe
 	return pulumi.ToOutputWithContext(ctx, i).(GitHubRepoOutput)
 }
 
+func (i *GitHubRepo) ToOutput(ctx context.Context) pulumix.Output[*GitHubRepo] {
+	return pulumix.Output[*GitHubRepo]{
+		OutputState: i.ToGitHubRepoOutputWithContext(ctx).OutputState,
+	}
+}
+
 // GitHubRepoArrayInput is an input type that accepts GitHubRepoArray and GitHubRepoArrayOutput values.
 // You can construct a concrete instance of `GitHubRepoArrayInput` via:
 //
@@ -141,6 +147,12 @@ func (i GitHubRepoArray) ToGitHubRepoArrayOutput() GitHubRepoArrayOutput {
 
 func (i GitHubRepoArray) ToGitHubRepoArrayOutputWithContext(ctx context.Context) GitHubRepoArrayOutput {
 	return pulumi.ToOutputWithContext(ctx, i).(GitHubRepoArrayOutput)
+}
+
+func (i GitHubRepoArray) ToOutput(ctx context.Context) pulumix.Output[[]*GitHubRepo] {
+	return pulumix.Output[[]*GitHubRepo]{
+		OutputState: i.ToGitHubRepoArrayOutputWithContext(ctx).OutputState,
+	}
 }
 
 // GitHubRepoMapInput is an input type that accepts GitHubRepoMap and GitHubRepoMapOutput values.
@@ -168,6 +180,12 @@ func (i GitHubRepoMap) ToGitHubRepoMapOutputWithContext(ctx context.Context) Git
 	return pulumi.ToOutputWithContext(ctx, i).(GitHubRepoMapOutput)
 }
 
+func (i GitHubRepoMap) ToOutput(ctx context.Context) pulumix.Output[map[string]*GitHubRepo] {
+	return pulumix.Output[map[string]*GitHubRepo]{
+		OutputState: i.ToGitHubRepoMapOutputWithContext(ctx).OutputState,
+	}
+}
+
 type GitHubRepoOutput struct{ *pulumi.OutputState }
 
 func (GitHubRepoOutput) ElementType() reflect.Type {
@@ -180,6 +198,12 @@ func (o GitHubRepoOutput) ToGitHubRepoOutput() GitHubRepoOutput {
 
 func (o GitHubRepoOutput) ToGitHubRepoOutputWithContext(ctx context.Context) GitHubRepoOutput {
 	return o
+}
+
+func (o GitHubRepoOutput) ToOutput(ctx context.Context) pulumix.Output[*GitHubRepo] {
+	return pulumix.Output[*GitHubRepo]{
+		OutputState: o.OutputState,
+	}
 }
 
 func (o GitHubRepoOutput) AbsFolderName() pulumi.StringOutput {
@@ -208,10 +232,6 @@ func (o GitHubRepoOutput) Interpreter() pulumi.StringArrayOutput {
 
 func (o GitHubRepoOutput) Org() pulumi.StringOutput {
 	return o.ApplyT(func(v *GitHubRepo) pulumi.StringOutput { return v.Org }).(pulumi.StringOutput)
-}
-
-func (o GitHubRepoOutput) OutputBranch() pulumi.StringOutput {
-	return o.ApplyT(func(v *GitHubRepo) pulumi.StringOutput { return v.OutputBranch }).(pulumi.StringOutput)
 }
 
 func (o GitHubRepoOutput) Repo() pulumi.StringOutput {
@@ -244,6 +264,12 @@ func (o GitHubRepoArrayOutput) ToGitHubRepoArrayOutputWithContext(ctx context.Co
 	return o
 }
 
+func (o GitHubRepoArrayOutput) ToOutput(ctx context.Context) pulumix.Output[[]*GitHubRepo] {
+	return pulumix.Output[[]*GitHubRepo]{
+		OutputState: o.OutputState,
+	}
+}
+
 func (o GitHubRepoArrayOutput) Index(i pulumi.IntInput) GitHubRepoOutput {
 	return pulumi.All(o, i).ApplyT(func(vs []interface{}) *GitHubRepo {
 		return vs[0].([]*GitHubRepo)[vs[1].(int)]
@@ -262,6 +288,12 @@ func (o GitHubRepoMapOutput) ToGitHubRepoMapOutput() GitHubRepoMapOutput {
 
 func (o GitHubRepoMapOutput) ToGitHubRepoMapOutputWithContext(ctx context.Context) GitHubRepoMapOutput {
 	return o
+}
+
+func (o GitHubRepoMapOutput) ToOutput(ctx context.Context) pulumix.Output[map[string]*GitHubRepo] {
+	return pulumix.Output[map[string]*GitHubRepo]{
+		OutputState: o.OutputState,
+	}
 }
 
 func (o GitHubRepoMapOutput) MapIndex(k pulumi.StringInput) GitHubRepoOutput {

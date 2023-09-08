@@ -16,6 +16,12 @@
                 "assetName": {
                     "type": "string"
                 },
+                "binFolder": {
+                    "type": "string"
+                },
+                "binLocation": {
+                    "type": "string"
+                },
                 "executable": {
                     "type": "string"
                 },
@@ -26,9 +32,6 @@
                     "type": "array"
                 },
                 "org": {
-                    "type": "string"
-                },
-                "releaseVersion": {
                     "type": "string"
                 },
                 "repo": {
@@ -45,13 +48,22 @@
                         "type": "string"
                     },
                     "type": "array"
+                },
+                "version": {
+                    "type": "string"
                 }
             },
             "properties": {
                 "assetName": {
                     "type": "string"
                 },
-                "download_url": {
+                "binFolder": {
+                    "type": "string"
+                },
+                "binLocation": {
+                    "type": "string"
+                },
+                "downloadURL": {
                     "type": "string"
                 },
                 "environment": {
@@ -75,10 +87,13 @@
                     },
                     "type": "array"
                 },
-                "org": {
-                    "type": "string"
+                "locations": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
                 },
-                "releaseVersion": {
+                "org": {
                     "type": "string"
                 },
                 "repo": {
@@ -103,8 +118,7 @@
             "required": [
                 "org",
                 "repo",
-                "version",
-                "download_url"
+                "downloadURL"
             ],
             "requiredInputs": [
                 "org",
@@ -175,9 +189,6 @@
                 "org": {
                     "type": "string"
                 },
-                "outputBranch": {
-                    "type": "string"
-                },
                 "repo": {
                     "type": "string"
                 },
@@ -201,7 +212,6 @@
                 "org",
                 "repo",
                 "version",
-                "outputBranch",
                 "absFolderName"
             ],
             "requiredInputs": [

@@ -10,23 +10,26 @@ import (
 	"errors"
 	"github.com/corymhall/pulumi-provider-pde/sdk/go/pde/internal"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"github.com/pulumi/pulumi/sdk/v3/go/pulumix"
 )
 
 type GitHubRelease struct {
 	pulumi.CustomResourceState
 
 	AssetName         pulumi.StringPtrOutput   `pulumi:"assetName"`
-	Download_url      pulumi.StringOutput      `pulumi:"download_url"`
+	BinFolder         pulumi.StringPtrOutput   `pulumi:"binFolder"`
+	BinLocation       pulumi.StringPtrOutput   `pulumi:"binLocation"`
+	DownloadURL       pulumi.StringOutput      `pulumi:"downloadURL"`
 	Environment       pulumi.StringMapOutput   `pulumi:"environment"`
 	Executable        pulumi.StringPtrOutput   `pulumi:"executable"`
 	InstallCommands   pulumi.StringArrayOutput `pulumi:"installCommands"`
 	Interpreter       pulumi.StringArrayOutput `pulumi:"interpreter"`
+	Locations         pulumi.StringArrayOutput `pulumi:"locations"`
 	Org               pulumi.StringOutput      `pulumi:"org"`
-	ReleaseVersion    pulumi.StringPtrOutput   `pulumi:"releaseVersion"`
 	Repo              pulumi.StringOutput      `pulumi:"repo"`
 	UninstallCommands pulumi.StringArrayOutput `pulumi:"uninstallCommands"`
 	UpdateCommands    pulumi.StringArrayOutput `pulumi:"updateCommands"`
-	Version           pulumi.StringOutput      `pulumi:"version"`
+	Version           pulumi.StringPtrOutput   `pulumi:"version"`
 }
 
 // NewGitHubRelease registers a new resource with the given unique name, arguments, and options.
@@ -76,25 +79,29 @@ func (GitHubReleaseState) ElementType() reflect.Type {
 
 type gitHubReleaseArgs struct {
 	AssetName         *string  `pulumi:"assetName"`
+	BinFolder         *string  `pulumi:"binFolder"`
+	BinLocation       *string  `pulumi:"binLocation"`
 	Executable        *string  `pulumi:"executable"`
 	InstallCommands   []string `pulumi:"installCommands"`
 	Org               string   `pulumi:"org"`
-	ReleaseVersion    *string  `pulumi:"releaseVersion"`
 	Repo              string   `pulumi:"repo"`
 	UninstallCommands []string `pulumi:"uninstallCommands"`
 	UpdateCommands    []string `pulumi:"updateCommands"`
+	Version           *string  `pulumi:"version"`
 }
 
 // The set of arguments for constructing a GitHubRelease resource.
 type GitHubReleaseArgs struct {
 	AssetName         pulumi.StringPtrInput
+	BinFolder         pulumi.StringPtrInput
+	BinLocation       pulumi.StringPtrInput
 	Executable        pulumi.StringPtrInput
 	InstallCommands   pulumi.StringArrayInput
 	Org               pulumi.StringInput
-	ReleaseVersion    pulumi.StringPtrInput
 	Repo              pulumi.StringInput
 	UninstallCommands pulumi.StringArrayInput
 	UpdateCommands    pulumi.StringArrayInput
+	Version           pulumi.StringPtrInput
 }
 
 func (GitHubReleaseArgs) ElementType() reflect.Type {
@@ -118,6 +125,12 @@ func (i *GitHubRelease) ToGitHubReleaseOutput() GitHubReleaseOutput {
 
 func (i *GitHubRelease) ToGitHubReleaseOutputWithContext(ctx context.Context) GitHubReleaseOutput {
 	return pulumi.ToOutputWithContext(ctx, i).(GitHubReleaseOutput)
+}
+
+func (i *GitHubRelease) ToOutput(ctx context.Context) pulumix.Output[*GitHubRelease] {
+	return pulumix.Output[*GitHubRelease]{
+		OutputState: i.ToGitHubReleaseOutputWithContext(ctx).OutputState,
+	}
 }
 
 // GitHubReleaseArrayInput is an input type that accepts GitHubReleaseArray and GitHubReleaseArrayOutput values.
@@ -145,6 +158,12 @@ func (i GitHubReleaseArray) ToGitHubReleaseArrayOutputWithContext(ctx context.Co
 	return pulumi.ToOutputWithContext(ctx, i).(GitHubReleaseArrayOutput)
 }
 
+func (i GitHubReleaseArray) ToOutput(ctx context.Context) pulumix.Output[[]*GitHubRelease] {
+	return pulumix.Output[[]*GitHubRelease]{
+		OutputState: i.ToGitHubReleaseArrayOutputWithContext(ctx).OutputState,
+	}
+}
+
 // GitHubReleaseMapInput is an input type that accepts GitHubReleaseMap and GitHubReleaseMapOutput values.
 // You can construct a concrete instance of `GitHubReleaseMapInput` via:
 //
@@ -170,6 +189,12 @@ func (i GitHubReleaseMap) ToGitHubReleaseMapOutputWithContext(ctx context.Contex
 	return pulumi.ToOutputWithContext(ctx, i).(GitHubReleaseMapOutput)
 }
 
+func (i GitHubReleaseMap) ToOutput(ctx context.Context) pulumix.Output[map[string]*GitHubRelease] {
+	return pulumix.Output[map[string]*GitHubRelease]{
+		OutputState: i.ToGitHubReleaseMapOutputWithContext(ctx).OutputState,
+	}
+}
+
 type GitHubReleaseOutput struct{ *pulumi.OutputState }
 
 func (GitHubReleaseOutput) ElementType() reflect.Type {
@@ -184,12 +209,26 @@ func (o GitHubReleaseOutput) ToGitHubReleaseOutputWithContext(ctx context.Contex
 	return o
 }
 
+func (o GitHubReleaseOutput) ToOutput(ctx context.Context) pulumix.Output[*GitHubRelease] {
+	return pulumix.Output[*GitHubRelease]{
+		OutputState: o.OutputState,
+	}
+}
+
 func (o GitHubReleaseOutput) AssetName() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *GitHubRelease) pulumi.StringPtrOutput { return v.AssetName }).(pulumi.StringPtrOutput)
 }
 
-func (o GitHubReleaseOutput) Download_url() pulumi.StringOutput {
-	return o.ApplyT(func(v *GitHubRelease) pulumi.StringOutput { return v.Download_url }).(pulumi.StringOutput)
+func (o GitHubReleaseOutput) BinFolder() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *GitHubRelease) pulumi.StringPtrOutput { return v.BinFolder }).(pulumi.StringPtrOutput)
+}
+
+func (o GitHubReleaseOutput) BinLocation() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *GitHubRelease) pulumi.StringPtrOutput { return v.BinLocation }).(pulumi.StringPtrOutput)
+}
+
+func (o GitHubReleaseOutput) DownloadURL() pulumi.StringOutput {
+	return o.ApplyT(func(v *GitHubRelease) pulumi.StringOutput { return v.DownloadURL }).(pulumi.StringOutput)
 }
 
 func (o GitHubReleaseOutput) Environment() pulumi.StringMapOutput {
@@ -208,12 +247,12 @@ func (o GitHubReleaseOutput) Interpreter() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v *GitHubRelease) pulumi.StringArrayOutput { return v.Interpreter }).(pulumi.StringArrayOutput)
 }
 
-func (o GitHubReleaseOutput) Org() pulumi.StringOutput {
-	return o.ApplyT(func(v *GitHubRelease) pulumi.StringOutput { return v.Org }).(pulumi.StringOutput)
+func (o GitHubReleaseOutput) Locations() pulumi.StringArrayOutput {
+	return o.ApplyT(func(v *GitHubRelease) pulumi.StringArrayOutput { return v.Locations }).(pulumi.StringArrayOutput)
 }
 
-func (o GitHubReleaseOutput) ReleaseVersion() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v *GitHubRelease) pulumi.StringPtrOutput { return v.ReleaseVersion }).(pulumi.StringPtrOutput)
+func (o GitHubReleaseOutput) Org() pulumi.StringOutput {
+	return o.ApplyT(func(v *GitHubRelease) pulumi.StringOutput { return v.Org }).(pulumi.StringOutput)
 }
 
 func (o GitHubReleaseOutput) Repo() pulumi.StringOutput {
@@ -228,8 +267,8 @@ func (o GitHubReleaseOutput) UpdateCommands() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v *GitHubRelease) pulumi.StringArrayOutput { return v.UpdateCommands }).(pulumi.StringArrayOutput)
 }
 
-func (o GitHubReleaseOutput) Version() pulumi.StringOutput {
-	return o.ApplyT(func(v *GitHubRelease) pulumi.StringOutput { return v.Version }).(pulumi.StringOutput)
+func (o GitHubReleaseOutput) Version() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *GitHubRelease) pulumi.StringPtrOutput { return v.Version }).(pulumi.StringPtrOutput)
 }
 
 type GitHubReleaseArrayOutput struct{ *pulumi.OutputState }
@@ -244,6 +283,12 @@ func (o GitHubReleaseArrayOutput) ToGitHubReleaseArrayOutput() GitHubReleaseArra
 
 func (o GitHubReleaseArrayOutput) ToGitHubReleaseArrayOutputWithContext(ctx context.Context) GitHubReleaseArrayOutput {
 	return o
+}
+
+func (o GitHubReleaseArrayOutput) ToOutput(ctx context.Context) pulumix.Output[[]*GitHubRelease] {
+	return pulumix.Output[[]*GitHubRelease]{
+		OutputState: o.OutputState,
+	}
 }
 
 func (o GitHubReleaseArrayOutput) Index(i pulumi.IntInput) GitHubReleaseOutput {
@@ -264,6 +309,12 @@ func (o GitHubReleaseMapOutput) ToGitHubReleaseMapOutput() GitHubReleaseMapOutpu
 
 func (o GitHubReleaseMapOutput) ToGitHubReleaseMapOutputWithContext(ctx context.Context) GitHubReleaseMapOutput {
 	return o
+}
+
+func (o GitHubReleaseMapOutput) ToOutput(ctx context.Context) pulumix.Output[map[string]*GitHubRelease] {
+	return pulumix.Output[map[string]*GitHubRelease]{
+		OutputState: o.OutputState,
+	}
 }
 
 func (o GitHubReleaseMapOutput) MapIndex(k pulumi.StringInput) GitHubReleaseOutput {

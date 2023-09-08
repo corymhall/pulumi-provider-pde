@@ -2,6 +2,7 @@ package installers
 
 import (
 	// "errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -19,16 +20,17 @@ type Shell struct{}
 
 var _ = (infer.CustomRead[ShellInputs, ShellOutputs])((*Shell)(nil))
 var _ = (infer.CustomUpdate[ShellInputs, ShellOutputs])((*Shell)(nil))
+var _ = (infer.CustomDiff[ShellInputs, ShellOutputs])((*Shell)(nil))
 var _ = (infer.CustomDelete[ShellOutputs])((*Shell)(nil))
 var _ = (infer.CustomCheck[ShellInputs])((*Shell)(nil))
 
 type ShellInputs struct {
 	BaseInputs
 	CommandInputs
-	VersionCommand  *string   `pulumi:"versionCommand"`
 	InstallCommands *[]string `pulumi:"installCommands"`
 	ProgramName     *string   `pulumi:"programName"`
 	DownloadUrl     *string   `pulumi:"downloadUrl"`
+	VersionCommand  *string   `pulumi:"versionCommand,optional"`
 	BinLocation     *string   `pulumi:"binLocation,optional"`
 	Executable      *bool     `pulumi:"executable,optional"`
 }
@@ -37,6 +39,36 @@ type ShellOutputs struct {
 	ShellInputs
 	CommandOutputs
 	BaseOutputs
+	Location *string `pulumi:"location"`
+}
+
+func (l *Shell) Diff(ctx p.Context, id string, olds ShellOutputs, news ShellInputs) (p.DiffResponse, error) {
+	diff := map[string]p.PropertyDiff{}
+
+	if *news.BinLocation != *olds.BinLocation {
+		diff["binLocation"] = p.PropertyDiff{Kind: p.UpdateReplace}
+	}
+	if *news.DownloadUrl != *olds.DownloadUrl {
+		diff["downloadUrl"] = p.PropertyDiff{Kind: p.UpdateReplace}
+	}
+	if news.Executable != olds.Executable {
+		diff["executable"] = p.PropertyDiff{Kind: p.UpdateReplace}
+	}
+	if news.InstallCommands != olds.InstallCommands {
+		diff["installCommands"] = p.PropertyDiff{Kind: p.UpdateReplace}
+	}
+	if news.UpdateCommands != olds.UpdateCommands {
+		diff["updateCommands"] = p.PropertyDiff{Kind: p.UpdateReplace}
+	}
+	if *news.ProgramName != *olds.ProgramName {
+		diff["programName"] = p.PropertyDiff{Kind: p.UpdateReplace}
+	}
+
+	return p.DiffResponse{
+		DeleteBeforeReplace: true,
+		HasChanges:          len(diff) > 0,
+		DetailedDiff:        diff,
+	}, nil
 }
 
 // All resources must implement Create at a minumum.
@@ -54,30 +86,86 @@ func (l *Shell) Create(ctx p.Context, name string, input ShellInputs, preview bo
 	return name, *state, nil
 }
 
+func (l *Shell) Read(ctx p.Context, id string, inputs ShellInputs, state ShellOutputs) (
+	canonicalID string, normalizedInputs ShellInputs, normalizedState ShellOutputs, err error) {
+
+	if inputs.VersionCommand != nil {
+		output, err := state.run(ctx, *inputs.VersionCommand, os.TempDir())
+		if err != nil {
+			return "", inputs, state, err
+		}
+		state.Version = &output
+	}
+
+	return *inputs.ProgramName, inputs, state, nil
+}
+
+func (l *Shell) Check(ctx p.Context, name string, oldInputs, newInputs resource.PropertyMap) (ShellInputs, []p.CheckFailure, error) {
+	fails := []p.CheckFailure{}
+	if _, ok := newInputs["binLocation"]; !ok {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			fails = append(fails, p.CheckFailure{Property: "binLocation", Reason: err.Error()})
+		} else {
+			binLocation := path.Join(home, ".local", "bin")
+			newInputs["binLocation"] = resource.NewStringProperty(binLocation)
+		}
+	}
+
+	inputs, failures, err := infer.DefaultCheck[ShellInputs](newInputs)
+	return inputs, append(failures, fails...), err
+}
+
+func (l *Shell) Update(ctx p.Context, name string, olds ShellOutputs, news ShellInputs, preview bool) (ShellOutputs, error) {
+	state := &ShellOutputs{
+		ShellInputs: news,
+		BaseOutputs: BaseOutputs{
+			Version: olds.Version,
+		},
+	}
+	if preview {
+		return *state, nil
+	}
+	var commands []string
+	if news.UpdateCommands != nil {
+		commands = *news.UpdateCommands
+	} else {
+		commands = *news.InstallCommands
+	}
+	if err := state.createOrUpdate(ctx, news, commands); err != nil {
+		return *state, err
+	}
+	return *state, nil
+}
+
+func (l *Shell) Delete(ctx p.Context, id string, props ShellOutputs) error {
+	if props.UninstallCommands != nil {
+		_, err := props.run(ctx, strings.Join(*props.UninstallCommands, " && "), "")
+		if err != nil {
+			return err
+		}
+
+	}
+	if err := os.Remove(*props.Location); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	return nil
+}
+
 func (s *ShellOutputs) createOrUpdate(ctx p.Context, input ShellInputs, commands []string) error {
-	file, err := downloadTmpFile(*input.DownloadUrl)
-	defer os.Remove(file)
+	dir := os.TempDir()
+	_, err := s.run(ctx, fmt.Sprintf("curl -OL %s", *input.DownloadUrl), dir)
 	if err != nil {
 		return err
 	}
-	dir := os.TempDir()
 	_, err = s.run(ctx, strings.Join(commands, " && "), dir)
 	if err != nil {
 		return err
 	}
-	var binLocation string
-	if input.BinLocation != nil {
-		binLocation = *input.BinLocation
-	} else {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return err
-		}
-		binLocation = path.Join(home, ".local", "bin")
-	}
 
 	if input.Executable != nil && *input.Executable {
-		target := path.Join(binLocation, *input.ProgramName)
+		target := path.Join(*input.BinLocation, *input.ProgramName)
+		s.Location = &target
 		// move it
 		if err = os.Rename(path.Join(dir, *input.ProgramName), target); err != nil {
 			return err
@@ -113,6 +201,7 @@ func downloadTmpFile(downloadUrl string) (string, error) {
 	defer resp.Body.Close()
 
 	name := path.Join(os.TempDir(), fileName)
+	fmt.Println("tmp file", name)
 	out, err := os.Create(name)
 	if err != nil {
 		return "", err
@@ -120,61 +209,9 @@ func downloadTmpFile(downloadUrl string) (string, error) {
 	defer out.Close()
 
 	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return "", err
+	}
+	fmt.Println()
 	return name, err
-}
-
-func (l *Shell) Read(ctx p.Context, id string, inputs ShellInputs, state ShellOutputs) (
-	canonicalID string, normalizedInputs ShellInputs, normalizedState ShellOutputs, err error) {
-
-	if inputs.VersionCommand != nil {
-		output, err := state.run(ctx, *inputs.VersionCommand, os.TempDir())
-		if err != nil {
-			return "", inputs, state, err
-		}
-		state.Version = &output
-	}
-
-	return *inputs.ProgramName, inputs, state, nil
-
-}
-
-func (l *Shell) Check(ctx p.Context, name string, oldInputs, newInputs resource.PropertyMap) (ShellInputs, []p.CheckFailure, error) {
-	return infer.DefaultCheck[ShellInputs](newInputs)
-}
-
-func (l *Shell) Update(ctx p.Context, name string, olds ShellOutputs, news ShellInputs, preview bool) (ShellOutputs, error) {
-	state := &ShellOutputs{
-		ShellInputs: news,
-		BaseOutputs: BaseOutputs{
-			Version: olds.Version,
-		},
-	}
-	if preview {
-		return *state, nil
-	}
-	var commands []string
-	if news.UpdateCommands != nil {
-		commands = *news.UpdateCommands
-	} else {
-		commands = *news.InstallCommands
-	}
-	if err := state.createOrUpdate(ctx, news, commands); err != nil {
-		return *state, err
-	}
-	return *state, nil
-}
-
-func (l *Shell) Delete(ctx p.Context, id string, props ShellOutputs) error {
-	file := path.Join(*props.BinLocation, *props.ProgramName)
-	if props.UninstallCommands != nil {
-		_, err := props.run(ctx, strings.Join(*props.UninstallCommands, " && "), "")
-		if err != nil {
-			return err
-		}
-
-	}
-	if err := os.Remove(file); err != nil && !os.IsNotExist(err) {
-		return err
-	}
-	return nil
 }

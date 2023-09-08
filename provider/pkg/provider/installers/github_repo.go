@@ -24,6 +24,7 @@ type GitHubRepo struct{}
 var _ = (infer.CustomRead[GitHubRepoInputs, GitHubRepoOutputs])((*GitHubRepo)(nil))
 var _ = (infer.CustomUpdate[GitHubRepoInputs, GitHubRepoOutputs])((*GitHubRepo)(nil))
 var _ = (infer.CustomDelete[GitHubRepoOutputs])((*GitHubRepo)(nil))
+var _ = (infer.CustomDiff[GitHubRepoInputs, GitHubRepoOutputs])((*GitHubRepo)(nil))
 var _ = (infer.CustomCheck[GitHubRepoInputs])((*GitHubRepo)(nil))
 
 type GitHubRepoInputs struct {
@@ -36,8 +37,37 @@ type GitHubRepoOutputs struct {
 	CommandOutputs
 	GitHubRepoInputs
 	BaseOutputs
-	OutputBranch  *string `pulumi:"outputBranch"`
 	AbsFolderName *string `pulumi:"absFolderName"`
+}
+
+func (l *GitHubRepo) Diff(ctx p.Context, id string, olds GitHubRepoOutputs, news GitHubRepoInputs) (p.DiffResponse, error) {
+	diff := map[string]p.PropertyDiff{}
+	if news.Branch == nil || *news.Branch != *olds.Branch {
+		diff["branch"] = p.PropertyDiff{Kind: p.Update}
+	}
+	if news.FolderName == nil || *news.FolderName != *olds.FolderName {
+		diff["folderName"] = p.PropertyDiff{Kind: p.UpdateReplace}
+	}
+	if news.InstallCommands != olds.InstallCommands {
+		diff["installCommands"] = p.PropertyDiff{Kind: p.Update}
+	}
+	if *news.Org != *olds.Org {
+		diff["org"] = p.PropertyDiff{Kind: p.UpdateReplace}
+	}
+
+	if *news.Repo != *olds.Repo {
+		diff["repo"] = p.PropertyDiff{Kind: p.UpdateReplace}
+	}
+
+	if news.UpdateCommands != olds.UpdateCommands {
+		diff["updateCommands"] = p.PropertyDiff{Kind: p.Update}
+	}
+
+	return p.DiffResponse{
+		DeleteBeforeReplace: true,
+		HasChanges:          len(diff) > 0,
+		DetailedDiff:        diff,
+	}, nil
 }
 
 // All resources must implement Create at a minumum.
@@ -46,72 +76,34 @@ func (l *GitHubRepo) Create(ctx p.Context, name string, input GitHubRepoInputs, 
 		GitHubRepoInputs: input,
 	}
 
-	if input.Branch == nil {
-		branch := "main"
-		state.OutputBranch = &branch
-	}
-
-	absPath, err := state.getLocation(ctx, &input)
-	if err != nil {
+	if err := state.getLocation(ctx, &input); err != nil {
 		return "", *state, err
 	}
 	if preview {
 		return name, *state, nil
 	}
 
-	if err = state.clone(ctx, absPath, input); err != nil {
+	if err := state.clone(ctx, input); err != nil {
 		return "", *state, err
 	}
 
 	if input.InstallCommands != nil {
-		_, err = state.run(ctx, strings.Join(*input.InstallCommands, " && "), absPath)
+		_, err := state.run(ctx, strings.Join(*input.InstallCommands, " && "), *state.AbsFolderName)
 		if err != nil {
 			return "", *state, err
 		}
 	}
 
-	version, err := state.run(ctx, versionCommand, absPath)
+	version, err := state.run(ctx, versionCommand, *state.AbsFolderName)
 	if err != nil {
 		return "", *state, err
 	}
 	state.Version = &version
-	state.AbsFolderName = &absPath
 
 	return name, *state, nil
 }
 
-func (o *GitHubRepoOutputs) getLocation(ctx p.Context, inputs *GitHubRepoInputs) (string, error) {
-	dir, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-	if inputs.FolderName == nil {
-		inputs.FolderName = inputs.Repo
-	}
-	absPath := path.Join(dir, *inputs.FolderName)
-	_, err = os.Lstat(absPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			os.MkdirAll(absPath, 0777)
-		} else {
-			return "", err
-		}
-	}
-	return absPath, nil
-}
-
-func (o *GitHubRepoOutputs) clone(ctx p.Context, absPath string, inputs GitHubRepoInputs) error {
-
-	command := fmt.Sprintf("git clone -b %s https://github.com/%s/%s %s", *o.Branch, *inputs.Org, *inputs.Repo, *inputs.FolderName)
-
-	// clone the repo
-	_, err := o.run(ctx, command, path.Dir(absPath))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
+// used for import operation
 func (l *GitHubRepo) Read(ctx p.Context, id string, inputs GitHubRepoInputs, state GitHubRepoOutputs) (
 	canonicalID string, normalizedInputs GitHubRepoInputs, normalizedState GitHubRepoOutputs, err error) {
 
@@ -120,10 +112,7 @@ func (l *GitHubRepo) Read(ctx p.Context, id string, inputs GitHubRepoInputs, sta
 	if err != nil {
 		return "", inputs, state, nil
 	}
-	if inputs.Branch == nil {
-		branch := "main"
-		state.OutputBranch = &branch
-	}
+
 	version, err := state.run(ctx, versionCmd, *state.AbsFolderName)
 	state.Version = &version
 	return "", inputs, state, nil
@@ -131,73 +120,109 @@ func (l *GitHubRepo) Read(ctx p.Context, id string, inputs GitHubRepoInputs, sta
 }
 
 func (l *GitHubRepo) Check(ctx p.Context, name string, oldInputs, newInputs resource.PropertyMap) (GitHubRepoInputs, []p.CheckFailure, error) {
+	if _, ok := newInputs["branch"]; !ok {
+		newInputs["branch"] = resource.NewStringProperty("main")
+	}
+	repo := newInputs["repo"].StringValue()
+	if _, ok := newInputs["folderName"]; !ok {
+		newInputs["folderName"] = resource.NewStringProperty(repo)
+	}
+	fmt.Println(newInputs["folderName"])
 	return infer.DefaultCheck[GitHubRepoInputs](newInputs)
 }
 
 func (l *GitHubRepo) Update(ctx p.Context, name string, olds GitHubRepoOutputs, news GitHubRepoInputs, preview bool) (GitHubRepoOutputs, error) {
 	state := &GitHubRepoOutputs{
 		GitHubRepoInputs: news,
+		AbsFolderName:    olds.AbsFolderName,
 		BaseOutputs:      olds.BaseOutputs,
+		CommandOutputs:   olds.CommandOutputs,
 	}
-	if news.Branch == nil {
-		branch := "main"
-		state.OutputBranch = &branch
-	} else {
-		state.OutputBranch = news.Branch
-	}
+
 	if preview {
 		return *state, nil
 	}
 
-	absPath, err := state.getLocation(ctx, &news)
-	if err != nil {
+	if err := state.getLocation(ctx, &news); err != nil {
 		return *state, err
 	}
 
 	// clone location has changed so we need to remove the old location
-	if absPath != *olds.AbsFolderName {
+	if *state.AbsFolderName != *olds.AbsFolderName {
 		if err := os.RemoveAll(*olds.AbsFolderName); err != nil && !os.IsNotExist(err) {
 			return *state, err
 		}
-		if err = state.clone(ctx, absPath, news); err != nil {
+		if err := state.clone(ctx, news); err != nil {
 			return *state, err
 		}
 		if news.InstallCommands != nil {
-			_, err = state.run(ctx, strings.Join(*news.InstallCommands, " && "), absPath)
+			_, err := state.run(ctx, strings.Join(*news.InstallCommands, " && "), *state.AbsFolderName)
 			if err != nil {
 				return *state, err
 			}
 		}
 	} else {
-		_, err = state.run(ctx, fetchCmd, absPath)
+		_, err := state.run(ctx, fetchCmd, *state.AbsFolderName)
 		if err != nil {
 			return *state, err
 		}
 		if *news.Branch != *olds.Branch {
 			// switch branch
-			_, err = state.run(ctx, fmt.Sprintf("git checkout %s", *news.Branch), absPath)
+			_, err = state.run(ctx, fmt.Sprintf("git checkout %s", *state.Branch), *state.AbsFolderName)
 			if err != nil {
 				return *state, err
 			}
 		} else {
 			// pull
-			_, err = state.run(ctx, "git pull", absPath)
+			_, err = state.run(ctx, "git pull", *state.AbsFolderName)
 			if err != nil {
 				return *state, err
 			}
 		}
 	}
 
-	version, err := state.run(ctx, versionCommand, absPath)
+	version, err := state.run(ctx, versionCommand, *state.AbsFolderName)
 	if err != nil {
 		return *state, err
 	}
 	state.Version = &version
-	state.AbsFolderName = &absPath
 
 	return *state, nil
 }
 
 func (l *GitHubRepo) Delete(ctx p.Context, id string, props GitHubRepoOutputs) error {
+	if err := os.RemoveAll(*props.AbsFolderName); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (o *GitHubRepoOutputs) getLocation(ctx p.Context, inputs *GitHubRepoInputs) error {
+	dir, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
+	absPath := path.Join(dir, *inputs.FolderName)
+	_, err = os.Lstat(absPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			os.MkdirAll(absPath, 0777)
+		} else {
+			return err
+		}
+	}
+	o.AbsFolderName = &absPath
+	return nil
+}
+
+func (o *GitHubRepoOutputs) clone(ctx p.Context, inputs GitHubRepoInputs) error {
+
+	command := fmt.Sprintf("git clone -b %s https://github.com/%s/%s %s", *inputs.Branch, *inputs.Org, *inputs.Repo, *inputs.FolderName)
+
+	// clone the repo
+	_, err := o.run(ctx, command, path.Dir(*o.AbsFolderName))
+	if err != nil {
+		return err
+	}
 	return nil
 }

@@ -1,3 +1,7 @@
 name: pde-go
 runtime: go
 description: A simple pde example
+plugins:
+  providers:
+  - name: pde
+    path: ../../bin

@@ -28,6 +28,7 @@ type Link struct{}
 
 var _ = (infer.CustomRead[LinkArgs, LinkState])((*Link)(nil))
 var _ = (infer.CustomUpdate[LinkArgs, LinkState])((*Link)(nil))
+var _ = (infer.CustomDiff[LinkArgs, LinkState])((*Link)(nil))
 var _ = (infer.CustomDelete[LinkState])((*Link)(nil))
 var _ = (infer.CustomCheck[LinkArgs])((*Link)(nil))
 
@@ -51,6 +52,25 @@ type LinkState struct {
 	Linked  *bool     `pulumi:"linked"`
 	IsDir   *bool     `pulumi:"isDir"`
 	Targets *[]string `pulumi:"targets"`
+}
+
+func (l *Link) Diff(ctx p.Context, id string, olds LinkState, news LinkArgs) (p.DiffResponse, error) {
+	diff := map[string]p.PropertyDiff{}
+	if (news.Recursive == nil && olds.Recursive != nil) || (*news.Recursive != *olds.Recursive) {
+		diff["recursive"] = p.PropertyDiff{Kind: p.UpdateReplace}
+	}
+	if *news.Source != *olds.Source {
+		diff["source"] = p.PropertyDiff{Kind: p.UpdateReplace}
+	}
+	if *news.Target != *olds.Target {
+		diff["target"] = p.PropertyDiff{Kind: p.UpdateReplace}
+	}
+
+	return p.DiffResponse{
+		DeleteBeforeReplace: true,
+		HasChanges:          len(diff) > 0,
+		DetailedDiff:        diff,
+	}, nil
 }
 
 // All resources must implement Create at a minumum.
@@ -137,10 +157,20 @@ func (l *Link) Update(ctx p.Context, name string, olds LinkState, news LinkArgs,
 	}
 
 	oldTargets := *state.Targets
+	var isDir bool
+	file, err := os.Lstat(*news.Source)
+	if err != nil {
+		return *state, err
+	}
+	if file.IsDir() {
+		isDir = true
+	} else {
+		isDir = false
+	}
 
 	// if we are recursively linking files in a directory
 	// then we need to do the update
-	if *olds.IsDir && recursive {
+	if isDir && recursive {
 		source, err := os.Lstat(*news.Source)
 		_, err = os.Lstat(*news.Target)
 		if err != nil {
@@ -152,24 +182,8 @@ func (l *Link) Update(ctx p.Context, name string, olds LinkState, news LinkArgs,
 		state.stats(news)
 		removeOld(oldTargets, *state.Targets)
 		return *state, nil
-	}
-
-	// nothing has changed
-	if *news.Source == *olds.Source &&
-		*news.Target == *olds.Target {
-		return *state, nil
-	}
-
-	// remove old target
-	if *news.Target != *olds.Target {
-		if err := os.Remove(*olds.Target); err != nil {
-			return LinkState{}, errors.New(fmt.Sprintf("Error removing target %s: %s", *olds.Target, err))
-		}
-	}
-
-	// make new link
-	if *news.Source != *olds.Source ||
-		*news.Target != *olds.Target {
+	} else {
+		// make new link
 		// first remove the old link
 		if err := os.Remove(*news.Target); err != nil && !os.IsNotExist(err) {
 			return LinkState{}, err
