@@ -127,7 +127,6 @@ func (l *GitHubRepo) Check(ctx p.Context, name string, oldInputs, newInputs reso
 	if _, ok := newInputs["folderName"]; !ok {
 		newInputs["folderName"] = resource.NewStringProperty(repo)
 	}
-	fmt.Println(newInputs["folderName"])
 	return infer.DefaultCheck[GitHubRepoInputs](newInputs)
 }
 

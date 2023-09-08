@@ -51,6 +51,7 @@ func TestGitHubReleaseCommand(t *testing.T) {
 		"binLocation": resource.PropertyValue{V: bin},
 		"binFolder":   resource.PropertyValue{V: "pulumi"},
 		"version":     resource.PropertyValue{V: "v3.81.0"},
+		"downloadURL": resource.PropertyValue{V: "https://github.com/pulumi/pulumi/releases/download/v3.81.0/pulumi-v3.81.0-darwin-arm64.tar.gz"},
 	}
 	// Run a create against an in-memory provider, assert it succeeded, and return the
 	// created property map
@@ -137,20 +138,18 @@ func TestGitHubReleaseCommand(t *testing.T) {
 	//
 	t.Run("update-preview", func(t *testing.T) {
 		assert.Equal(t, expectedProps(bin, "v3.80.0", resource.PropertyMap{
-			"version": resource.PropertyValue{V: "v3.80.0"},
+			"version":     resource.PropertyValue{V: "v3.80.0"},
+			"downloadURL": resource.MakeComputed(resource.PropertyValue{V: "https://github.com/pulumi/pulumi/releases/download/v3.80.0/pulumi-v3.80.0-darwin-arm64.tar.gz"}),
 		}), update(true /*preview*/, resource.PropertyValue{V: "v3.80.0"}))
 	})
-	//
-	// t.Run("update-replace-actual", func(t *testing.T) {
-	// 	assert.Equal(t, resource.PropertyMap{
-	// 		"org":           resource.PropertyValue{V: "corymhall"},
-	// 		"repo":          resource.PropertyValue{V: "pulumi-provider-pde"},
-	// 		"folderName":    resource.PropertyValue{V: "pulumi-provider-tmp"},
-	// 		"absFolderName": resource.PropertyValue{V: absFolder("pulumi-provider-tmp")},
-	// 		"version":       resource.PropertyValue{V: "f9a0bfe30df2f36d677240f811468ec27ac78446"},
-	// 		"branch":        resource.PropertyValue{V: "testing"},
-	// 	}, update(false /*preview*/, resource.PropertyValue{V: "pulumi-provider-tmp"}))
-	// })
+
+	t.Run("update-replace-actual", func(t *testing.T) {
+		assert.Equal(t, expectedProps(bin, "v3.80.0", resource.PropertyMap{
+			"version":     resource.PropertyValue{V: "v3.80.0"},
+			"downloadURL": resource.PropertyValue{V: "https://github.com/pulumi/pulumi/releases/download/v3.80.0/pulumi-v3.80.0-darwin-arm64.tar.gz"},
+			"locations":   locations,
+		}), update(false /*preview*/, resource.PropertyValue{V: "v3.80.0"}))
+	})
 
 	t.Run("delete-actual", func(t *testing.T) {
 		locations := resource.PropertyValue{

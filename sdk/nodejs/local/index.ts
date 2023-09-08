@@ -5,6 +5,11 @@ import * as pulumi from "@pulumi/pulumi";
 import * as utilities from "../utilities";
 
 // Export members:
+export { FileArgs } from "./file";
+export type File = import("./file").File;
+export const File: typeof import("./file").File = null as any;
+utilities.lazyLoad(exports, ["File"], () => require("./file"));
+
 export { LinkArgs } from "./link";
 export type Link = import("./link").Link;
 export const Link: typeof import("./link").Link = null as any;
@@ -15,6 +20,8 @@ const _module = {
     version: utilities.getVersion(),
     construct: (name: string, type: string, urn: string): pulumi.Resource => {
         switch (type) {
+            case "pde:local:File":
+                return new File(name, <any>undefined, { urn })
             case "pde:local:Link":
                 return new Link(name, <any>undefined, { urn })
             default:

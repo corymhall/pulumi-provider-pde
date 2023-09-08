@@ -201,7 +201,6 @@ func downloadTmpFile(downloadUrl string) (string, error) {
 	defer resp.Body.Close()
 
 	name := path.Join(os.TempDir(), fileName)
-	fmt.Println("tmp file", name)
 	out, err := os.Create(name)
 	if err != nil {
 		return "", err
@@ -212,6 +211,5 @@ func downloadTmpFile(downloadUrl string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	fmt.Println()
 	return name, err
 }

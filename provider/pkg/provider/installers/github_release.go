@@ -1,8 +1,6 @@
 package installers
 
 import (
-	// "errors"
-
 	"errors"
 	"fmt"
 	"os"
@@ -156,7 +154,6 @@ func (o *GitHubReleaseOutputs) createOrUpdate(ctx p.Context, commands []string, 
 		if err != nil {
 			return err
 		}
-		fmt.Println("\n", ls)
 		for _, l := range strings.Split(ls, "\n") {
 			locations = append(locations, path.Join(*input.BinLocation, l))
 		}
@@ -289,6 +286,16 @@ func (l *GitHubRelease) Update(ctx p.Context, name string, olds GitHubReleaseOut
 		DownloadURL:         olds.DownloadURL,
 		Locations:           olds.Locations,
 	}
+	if news.AssetName != nil {
+		downloadUrl, err := getReleaseDownloadURL(ctx, github.NewClient(nil), *news.Org, *news.Repo, *news.Version, *news.AssetName)
+		if err != nil {
+			return *state, err
+		}
+		state.DownloadURL = &downloadUrl
+	} else {
+		return *state, errors.New("assetName not defined, something went wrong!")
+	}
+
 	if preview {
 		return *state, nil
 	}
@@ -296,7 +303,7 @@ func (l *GitHubRelease) Update(ctx p.Context, name string, olds GitHubReleaseOut
 	var commands []string
 	if news.UpdateCommands != nil {
 		commands = *news.UninstallCommands
-	} else {
+	} else if news.InstallCommands != nil {
 		commands = *news.InstallCommands
 	}
 	if err := state.createOrUpdate(ctx, commands, &news); err != nil {

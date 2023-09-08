@@ -34,6 +34,7 @@ _utilities.register(
   "mod": "local",
   "fqn": "pulumi_pde.local",
   "classes": {
+   "pde:local:File": "File",
    "pde:local:Link": "Link"
   }
  }

@@ -219,6 +219,45 @@
                 "repo"
             ]
         },
+        "pde:local:File": {
+            "description": "A file projected into a pulumi resource",
+            "inputProperties": {
+                "content": {
+                    "description": "The content of the file.",
+                    "type": "string"
+                },
+                "force": {
+                    "description": "If an already existing file should be deleted if it exists.",
+                    "type": "boolean"
+                },
+                "path": {
+                    "description": "The path of the file. This defaults to the name of the pulumi resource.",
+                    "type": "string"
+                }
+            },
+            "properties": {
+                "content": {
+                    "description": "The content of the file.",
+                    "type": "string"
+                },
+                "force": {
+                    "description": "If an already existing file should be deleted if it exists.",
+                    "type": "boolean"
+                },
+                "path": {
+                    "description": "The path of the file.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "path",
+                "force",
+                "content"
+            ],
+            "requiredInputs": [
+                "content"
+            ]
+        },
         "pde:local:Link": {
             "inputProperties": {
                 "overwrite": {

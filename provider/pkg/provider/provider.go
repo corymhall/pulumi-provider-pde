@@ -37,6 +37,7 @@ func NewProvider() p.Provider {
 		},
 		Resources: []infer.InferredResource{
 			infer.Resource[*local.Link, local.LinkArgs, local.LinkState](),
+			infer.Resource[*local.File, local.FileArgs, local.FileState](),
 			infer.Resource[*installers.GitHubRelease, installers.GitHubReleaseInputs, installers.GitHubReleaseOutputs](),
 			infer.Resource[*installers.GitHubRepo, installers.GitHubRepoInputs, installers.GitHubRepoOutputs](),
 		},
