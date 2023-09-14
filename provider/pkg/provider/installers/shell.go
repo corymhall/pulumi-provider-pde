@@ -29,7 +29,7 @@ type ShellInputs struct {
 	CommandInputs
 	InstallCommands *[]string `pulumi:"installCommands"`
 	ProgramName     *string   `pulumi:"programName"`
-	DownloadUrl     *string   `pulumi:"downloadUrl"`
+	DownloadUrl     *string   `pulumi:"downloadURL"`
 	VersionCommand  *string   `pulumi:"versionCommand,optional"`
 	BinLocation     *string   `pulumi:"binLocation,optional"`
 	Executable      *bool     `pulumi:"executable,optional"`

@@ -1,0 +1,82 @@
+{
+    "name": "pdec",
+    "license": "Apache-2.0",
+    "language": {
+        "go": {
+            "generateResourceContainerTypes": true,
+            "importBasePath": "github.com/corymhall/pulumi-provider-pde/sdk/go/pdec",
+            "liftSingleValueMethodReturns": true
+        }
+    },
+    "config": {},
+    "provider": {},
+    "resources": {
+        "pdec:local:Profile": {
+            "properties": {
+                "fileName": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "fileName"
+            ],
+            "inputProperties": {
+                "fileName": {
+                    "type": "string"
+                }
+            },
+            "requiredInputs": [
+                "fileName"
+            ],
+            "isComponent": true,
+            "methods": {
+                "addLines": "pdec:local:Profile/addLines",
+                "getFileName": "pdec:local:Profile/getFileName"
+            }
+        }
+    },
+    "functions": {
+        "pdec:local:Profile/addLines": {
+            "inputs": {
+                "properties": {
+                    "__self__": {
+                        "$ref": "#/resources/pdec:local:Profile"
+                    },
+                    "lines": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "__self__",
+                    "lines"
+                ]
+            },
+            "outputs": {}
+        },
+        "pdec:local:Profile/getFileName": {
+            "inputs": {
+                "properties": {
+                    "__self__": {
+                        "$ref": "#/resources/pdec:local:Profile"
+                    }
+                },
+                "required": [
+                    "__self__"
+                ]
+            },
+            "outputs": {
+                "properties": {
+                    "result": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "result"
+                ]
+            }
+        }
+    }
+}

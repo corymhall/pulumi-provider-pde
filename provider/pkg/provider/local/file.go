@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
+	"strings"
 
 	p "github.com/pulumi/pulumi-go-provider"
 	"github.com/pulumi/pulumi-go-provider/infer"
@@ -28,9 +30,9 @@ func (f *File) Annotate(a infer.Annotator) {
 }
 
 type FileArgs struct {
-	Path    string `pulumi:"path,optional"`
-	Force   bool   `pulumi:"force,optional"`
-	Content string `pulumi:"content"`
+	Path    string   `pulumi:"path"`
+	Content []string `pulumi:"content"`
+	Force   bool     `pulumi:"force,optional"`
 }
 
 func (f *FileArgs) Annotate(a infer.Annotator) {
@@ -40,9 +42,9 @@ func (f *FileArgs) Annotate(a infer.Annotator) {
 }
 
 type FileState struct {
-	Path    string `pulumi:"path"`
-	Force   bool   `pulumi:"force"`
-	Content string `pulumi:"content"`
+	Path    string   `pulumi:"path"`
+	Force   bool     `pulumi:"force"`
+	Content []string `pulumi:"content"`
 }
 
 func (f *FileState) Annotate(a infer.Annotator) {
@@ -58,9 +60,22 @@ func (*File) Create(ctx p.Context, name string, input FileArgs, preview bool) (i
 			return "", FileState{}, fmt.Errorf("file already exists; pass force=true to override")
 		}
 	}
+	contentString := strings.Join(input.Content, "\n")
+	state := &FileState{
+		Path:    input.Path,
+		Force:   input.Force,
+		Content: input.Content,
+	}
 
 	if preview { // Don't do the actual creating if in preview
-		return input.Path, FileState{}, nil
+		return input.Path, *state, nil
+	}
+
+	_, err = os.Stat(path.Dir(input.Path))
+	if err != nil && os.IsNotExist(err) {
+		if err := os.MkdirAll(path.Dir(input.Path), 0755); err != nil {
+			return "", FileState{}, err
+		}
 	}
 
 	f, err := os.Create(input.Path)
@@ -68,18 +83,14 @@ func (*File) Create(ctx p.Context, name string, input FileArgs, preview bool) (i
 		return "", FileState{}, err
 	}
 	defer f.Close()
-	n, err := f.WriteString(input.Content)
+	n, err := f.WriteString(contentString)
 	if err != nil {
 		return "", FileState{}, err
 	}
-	if n != len(input.Content) {
-		return "", FileState{}, fmt.Errorf("only wrote %d/%d bytes", n, len(input.Content))
+	if n != len(contentString) {
+		return "", FileState{}, fmt.Errorf("only wrote %d/%d bytes", n, len(contentString))
 	}
-	return input.Path, FileState{
-		Path:    input.Path,
-		Force:   input.Force,
-		Content: input.Content,
-	}, nil
+	return input.Path, *state, nil
 }
 
 func (*File) Delete(ctx p.Context, id string, props FileState) error {
@@ -99,13 +110,15 @@ func (*File) Check(ctx p.Context, name string, oldInputs, newInputs resource.Pro
 }
 
 func (*File) Update(ctx p.Context, id string, olds FileState, news FileArgs, preview bool) (FileState, error) {
-	if !preview && olds.Content != news.Content {
+	newContentString := strings.Join(news.Content, "\n")
+	oldContentString := strings.Join(olds.Content, "\n")
+	if !preview && oldContentString != newContentString {
 		f, err := os.Create(olds.Path)
 		if err != nil {
 			return FileState{}, err
 		}
 		defer f.Close()
-		n, err := f.WriteString(news.Content)
+		n, err := f.WriteString(newContentString)
 		if err != nil {
 			return FileState{}, err
 		}
@@ -124,7 +137,9 @@ func (*File) Update(ctx p.Context, id string, olds FileState, news FileArgs, pre
 
 func (*File) Diff(ctx p.Context, id string, olds FileState, news FileArgs) (p.DiffResponse, error) {
 	diff := map[string]p.PropertyDiff{}
-	if news.Content != olds.Content {
+	newContentString := strings.Join(news.Content, "\n")
+	oldContentString := strings.Join(olds.Content, "\n")
+	if newContentString != oldContentString {
 		diff["content"] = p.PropertyDiff{Kind: p.Update}
 	}
 	if news.Force != olds.Force {
@@ -150,11 +165,11 @@ func (*File) Read(ctx p.Context, id string, inputs FileArgs, state FileState) (c
 	return path, FileArgs{
 			Path:    path,
 			Force:   inputs.Force && state.Force,
-			Content: content,
+			Content: strings.Split(content, "\n"),
 		}, FileState{
 			Path:    path,
 			Force:   inputs.Force && state.Force,
-			Content: content,
+			Content: strings.Split(content, "\n"),
 		}, nil
 }
 

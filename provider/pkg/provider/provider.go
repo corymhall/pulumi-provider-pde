@@ -6,11 +6,14 @@ import (
 	"github.com/blang/semver"
 	"github.com/corymhall/pulumi-provider-pde/provider/pkg/provider/installers"
 	"github.com/corymhall/pulumi-provider-pde/provider/pkg/provider/local"
+	// "github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 
 	p "github.com/pulumi/pulumi-go-provider"
 	"github.com/pulumi/pulumi-go-provider/infer"
 	"github.com/pulumi/pulumi-go-provider/integration"
 	"github.com/pulumi/pulumi-go-provider/middleware/schema"
+	// "github.com/pulumi/pulumi/pkg/v3/resource/provider"
+	// pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
 )
 
 // Version is initialized by the Go linker to contain the semver of this build.
@@ -21,6 +24,10 @@ const (
 )
 
 func NewProvider() p.Provider {
+
+	// provider.Main(Name, func(hc *provider.HostClient) (pulumirpc.ResourceProviderServer, error) {
+	//
+	// })
 
 	// We tell the provider what resources it needs to support.
 	// In this case, a single custom resource.
@@ -35,6 +42,13 @@ func NewProvider() p.Provider {
 				},
 			},
 		},
+		// Components: []infer.InferredComponent{
+		// 	infer.Component[*local.Profile, local.ProfileArgs, *local.ProfileState](),
+		// },
+		// Functions: []infer.InferredFunction{
+		// 	infer.Function[*local.Profile, local.GetFileNameArgs, local.GetFileNameResult](),
+		// 	infer.Function[*local.Profile, pulumi.StringInput, local.GetFileNameResult](),
+		// },
 		Resources: []infer.InferredResource{
 			infer.Resource[*local.Link, local.LinkArgs, local.LinkState](),
 			infer.Resource[*local.File, local.FileArgs, local.FileState](),

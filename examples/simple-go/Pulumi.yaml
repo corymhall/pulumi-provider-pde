@@ -5,3 +5,5 @@ plugins:
   providers:
   - name: pde
     path: ../../bin
+  - name: pdec
+    path: ../../bin

@@ -1,18 +1,33 @@
 package main
 
 import (
-	"github.com/corymhall/pulumi-provider-pde/sdk/go/pde/installers"
+	"os"
+	"path"
+
+	"github.com/corymhall/pulumi-provider-pde/sdk/go/pdec/local"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
-		res, err := installers.NewGitHubRepo(ctx, "pulumi-provider-local", &installers.GitHubRepoArgs{
-			Org:  pulumi.String("corymhall"),
-			Repo: pulumi.String("pulumi-provider-pde"),
+		wd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		prof, err := local.NewProfile(ctx, "zsh", &local.ProfileArgs{
+			FileName: pulumi.String(path.Join(wd, "zshbkp")),
 		})
-		ctx.Export("abspath", res.AbsFolderName)
-		ctx.Export("version", res.Version)
-		return err
+		prof.AddLines(ctx, &local.ProfileAddLinesArgs{
+			Lines: pulumi.StringArray{
+				pulumi.String("Hello"),
+				pulumi.String("World"),
+			},
+		})
+		name, err := prof.GetFileName(ctx)
+		if err != nil {
+			return err
+		}
+		ctx.Export("name", name)
+		return nil
 	})
 }

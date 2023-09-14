@@ -1,6 +1,7 @@
 go 1.20
 
 use (
+	./components
 	./examples/simple-go
 	./provider
 	./provider/tests

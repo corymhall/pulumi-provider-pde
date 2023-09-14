@@ -1,58 +1,17 @@
 {
-    "config": {},
-    "description": "The pulumi pde provider...",
-    "displayName": "pde",
+    "name": "pde",
+    "license": "Apache-2.0",
     "language": {
         "go": {
             "generateResourceContainerTypes": true,
-            "importBasePath": "github.com/corymhall/pulumi-provider-pde/sdk/go/pde"
+            "importBasePath": "github.com/corymhall/pulumi-provider-pde/sdk/go/pde",
+            "liftSingleValueMethodReturns": true
         }
     },
-    "name": "pde",
+    "config": {},
     "provider": {},
     "resources": {
         "pde:installers:GitHubRelease": {
-            "inputProperties": {
-                "assetName": {
-                    "type": "string"
-                },
-                "binFolder": {
-                    "type": "string"
-                },
-                "binLocation": {
-                    "type": "string"
-                },
-                "executable": {
-                    "type": "string"
-                },
-                "installCommands": {
-                    "items": {
-                        "type": "string"
-                    },
-                    "type": "array"
-                },
-                "org": {
-                    "type": "string"
-                },
-                "repo": {
-                    "type": "string"
-                },
-                "uninstallCommands": {
-                    "items": {
-                        "type": "string"
-                    },
-                    "type": "array"
-                },
-                "updateCommands": {
-                    "items": {
-                        "type": "string"
-                    },
-                    "type": "array"
-                },
-                "version": {
-                    "type": "string"
-                }
-            },
             "properties": {
                 "assetName": {
                     "type": "string"
@@ -60,38 +19,35 @@
                 "binFolder": {
                     "type": "string"
                 },
-                "binLocation": {
-                    "type": "string"
-                },
                 "downloadURL": {
                     "type": "string"
                 },
                 "environment": {
+                    "type": "object",
                     "additionalProperties": {
                         "type": "string"
-                    },
-                    "type": "object"
+                    }
                 },
                 "executable": {
                     "type": "string"
                 },
                 "installCommands": {
+                    "type": "array",
                     "items": {
                         "type": "string"
-                    },
-                    "type": "array"
+                    }
                 },
                 "interpreter": {
+                    "type": "array",
                     "items": {
                         "type": "string"
-                    },
-                    "type": "array"
+                    }
                 },
                 "locations": {
+                    "type": "array",
                     "items": {
                         "type": "string"
-                    },
-                    "type": "array"
+                    }
                 },
                 "org": {
                     "type": "string"
@@ -100,16 +56,16 @@
                     "type": "string"
                 },
                 "uninstallCommands": {
+                    "type": "array",
                     "items": {
                         "type": "string"
-                    },
-                    "type": "array"
+                    }
                 },
                 "updateCommands": {
+                    "type": "array",
                     "items": {
                         "type": "string"
-                    },
-                    "type": "array"
+                    }
                 },
                 "version": {
                     "type": "string"
@@ -120,71 +76,83 @@
                 "repo",
                 "downloadURL"
             ],
+            "inputProperties": {
+                "assetName": {
+                    "type": "string"
+                },
+                "binFolder": {
+                    "type": "string"
+                },
+                "executable": {
+                    "type": "string"
+                },
+                "installCommands": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "org": {
+                    "type": "string"
+                },
+                "repo": {
+                    "type": "string"
+                },
+                "uninstallCommands": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "updateCommands": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
             "requiredInputs": [
                 "org",
                 "repo"
             ]
         },
         "pde:installers:GitHubRepo": {
-            "inputProperties": {
-                "branch": {
-                    "type": "string"
-                },
-                "folderName": {
-                    "type": "string"
-                },
-                "installCommands": {
-                    "items": {
-                        "type": "string"
-                    },
-                    "type": "array"
-                },
-                "org": {
-                    "type": "string"
-                },
-                "repo": {
-                    "type": "string"
-                },
-                "uninstallCommands": {
-                    "items": {
-                        "type": "string"
-                    },
-                    "type": "array"
-                },
-                "updateCommands": {
-                    "items": {
-                        "type": "string"
-                    },
-                    "type": "array"
-                }
-            },
             "properties": {
                 "absFolderName": {
+                    "type": "string"
+                },
+                "assetName": {
                     "type": "string"
                 },
                 "branch": {
                     "type": "string"
                 },
                 "environment": {
+                    "type": "object",
                     "additionalProperties": {
                         "type": "string"
-                    },
-                    "type": "object"
+                    }
                 },
                 "folderName": {
                     "type": "string"
                 },
                 "installCommands": {
+                    "type": "array",
                     "items": {
                         "type": "string"
-                    },
-                    "type": "array"
+                    }
                 },
                 "interpreter": {
+                    "type": "array",
                     "items": {
                         "type": "string"
-                    },
-                    "type": "array"
+                    }
+                },
+                "locations": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "org": {
                     "type": "string"
@@ -193,16 +161,16 @@
                     "type": "string"
                 },
                 "uninstallCommands": {
+                    "type": "array",
                     "items": {
                         "type": "string"
-                    },
-                    "type": "array"
+                    }
                 },
                 "updateCommands": {
+                    "type": "array",
                     "items": {
                         "type": "string"
-                    },
-                    "type": "array"
+                    }
                 },
                 "version": {
                     "type": "string"
@@ -211,41 +179,152 @@
             "required": [
                 "org",
                 "repo",
-                "version",
                 "absFolderName"
             ],
+            "inputProperties": {
+                "branch": {
+                    "type": "string"
+                },
+                "folderName": {
+                    "type": "string"
+                },
+                "installCommands": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "org": {
+                    "type": "string"
+                },
+                "repo": {
+                    "type": "string"
+                },
+                "uninstallCommands": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "updateCommands": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
             "requiredInputs": [
                 "org",
                 "repo"
             ]
         },
-        "pde:local:File": {
-            "description": "A file projected into a pulumi resource",
-            "inputProperties": {
-                "content": {
-                    "description": "The content of the file.",
+        "pde:installers:Shell": {
+            "properties": {
+                "binLocation": {
                     "type": "string"
                 },
-                "force": {
-                    "description": "If an already existing file should be deleted if it exists.",
+                "downloadURL": {
+                    "type": "string"
+                },
+                "environment": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "executable": {
                     "type": "boolean"
                 },
-                "path": {
-                    "description": "The path of the file. This defaults to the name of the pulumi resource.",
+                "installCommands": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "interpreter": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "location": {
+                    "type": "string"
+                },
+                "programName": {
+                    "type": "string"
+                },
+                "uninstallCommands": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "updateCommands": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "versionCommand": {
                     "type": "string"
                 }
             },
-            "properties": {
-                "content": {
-                    "description": "The content of the file.",
+            "required": [
+                "installCommands",
+                "programName",
+                "downloadURL",
+                "location"
+            ],
+            "inputProperties": {
+                "binLocation": {
                     "type": "string"
                 },
+                "downloadURL": {
+                    "type": "string"
+                },
+                "executable": {
+                    "type": "boolean"
+                },
+                "installCommands": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "programName": {
+                    "type": "string"
+                },
+                "uninstallCommands": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "updateCommands": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "requiredInputs": [
+                "installCommands",
+                "programName",
+                "downloadURL"
+            ]
+        },
+        "pde:local:File": {
+            "properties": {
+                "content": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "force": {
-                    "description": "If an already existing file should be deleted if it exists.",
                     "type": "boolean"
                 },
                 "path": {
-                    "description": "The path of the file.",
                     "type": "string"
                 }
             },
@@ -254,28 +333,26 @@
                 "force",
                 "content"
             ],
+            "inputProperties": {
+                "content": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "force": {
+                    "type": "boolean"
+                },
+                "path": {
+                    "type": "string"
+                }
+            },
             "requiredInputs": [
+                "path",
                 "content"
             ]
         },
         "pde:local:Link": {
-            "inputProperties": {
-                "overwrite": {
-                    "type": "boolean"
-                },
-                "recursive": {
-                    "type": "boolean"
-                },
-                "retain": {
-                    "type": "boolean"
-                },
-                "source": {
-                    "type": "string"
-                },
-                "target": {
-                    "type": "string"
-                }
-            },
             "properties": {
                 "isDir": {
                     "type": "boolean"
@@ -299,10 +376,10 @@
                     "type": "string"
                 },
                 "targets": {
+                    "type": "array",
                     "items": {
                         "type": "string"
-                    },
-                    "type": "array"
+                    }
                 }
             },
             "required": [
@@ -312,6 +389,23 @@
                 "isDir",
                 "targets"
             ],
+            "inputProperties": {
+                "overwrite": {
+                    "type": "boolean"
+                },
+                "recursive": {
+                    "type": "boolean"
+                },
+                "retain": {
+                    "type": "boolean"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "target": {
+                    "type": "string"
+                }
+            },
             "requiredInputs": [
                 "source",
                 "target"
