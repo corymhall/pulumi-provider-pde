@@ -2,7 +2,6 @@ package local
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -87,7 +86,7 @@ func (*File) Create(ctx p.Context, name string, input FileArgs, preview bool) (i
 	if err != nil {
 		return "", FileState{}, err
 	}
-	if n != len(contentString) {
+	if n != len([]byte(contentString)) {
 		return "", FileState{}, fmt.Errorf("only wrote %d/%d bytes", n, len(contentString))
 	}
 	return input.Path, *state, nil
@@ -122,7 +121,7 @@ func (*File) Update(ctx p.Context, id string, olds FileState, news FileArgs, pre
 		if err != nil {
 			return FileState{}, err
 		}
-		if n != len(news.Content) {
+		if n != len([]byte(newContentString)) {
 			return FileState{}, fmt.Errorf("only wrote %d/%d bytes", n, len(news.Content))
 		}
 	}
@@ -157,7 +156,7 @@ func (*File) Diff(ctx p.Context, id string, olds FileState, news FileArgs) (p.Di
 
 func (*File) Read(ctx p.Context, id string, inputs FileArgs, state FileState) (canonicalID string, normalizedInputs FileArgs, normalizedState FileState, err error) {
 	path := id
-	byteContent, err := ioutil.ReadFile(path)
+	byteContent, err := os.ReadFile(path)
 	if err != nil {
 		return "", FileArgs{}, FileState{}, err
 	}
@@ -165,7 +164,7 @@ func (*File) Read(ctx p.Context, id string, inputs FileArgs, state FileState) (c
 	return path, FileArgs{
 			Path:    path,
 			Force:   inputs.Force && state.Force,
-			Content: strings.Split(content, "\n"),
+			Content: inputs.Content,
 		}, FileState{
 			Path:    path,
 			Force:   inputs.Force && state.Force,

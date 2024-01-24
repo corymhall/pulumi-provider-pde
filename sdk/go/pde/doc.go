@@ -1,2 +1,2 @@
-// Package pde exports types, functions, subpackages for provisioning pde resources.
+// The pulumi pde provider...
 package pde

@@ -4,13 +4,13 @@ import (
 	// "errors"
 	"errors"
 	"fmt"
-	"io/fs"
 	"os"
-	"path"
+	"path/filepath"
 
 	p "github.com/pulumi/pulumi-go-provider"
 
 	"github.com/pulumi/pulumi-go-provider/infer"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/diag"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 )
 
@@ -56,7 +56,10 @@ type LinkState struct {
 
 func (l *Link) Diff(ctx p.Context, id string, olds LinkState, news LinkArgs) (p.DiffResponse, error) {
 	diff := map[string]p.PropertyDiff{}
-	if (news.Recursive == nil && olds.Recursive != nil) || (*news.Recursive != *olds.Recursive) {
+	if (news.Recursive == nil && olds.Recursive != nil) || (news.Recursive != nil && olds.Recursive == nil) {
+		diff["recursive"] = p.PropertyDiff{Kind: p.UpdateReplace}
+	}
+	if (news.Recursive != nil && olds.Recursive != nil) && *news.Recursive != *olds.Recursive {
 		diff["recursive"] = p.PropertyDiff{Kind: p.UpdateReplace}
 	}
 	if *news.Source != *olds.Source {
@@ -64,6 +67,10 @@ func (l *Link) Diff(ctx p.Context, id string, olds LinkState, news LinkArgs) (p.
 	}
 	if *news.Target != *olds.Target {
 		diff["target"] = p.PropertyDiff{Kind: p.UpdateReplace}
+	}
+
+	if olds.Linked == nil || *olds.Linked == false {
+		diff["linked"] = p.PropertyDiff{Kind: p.UpdateReplace}
 	}
 
 	return p.DiffResponse{
@@ -75,35 +82,19 @@ func (l *Link) Diff(ctx p.Context, id string, olds LinkState, news LinkArgs) (p.
 
 // All resources must implement Create at a minumum.
 func (l *Link) Create(ctx p.Context, name string, input LinkArgs, preview bool) (string, LinkState, error) {
+	f := false
 	state := &LinkState{
 		LinkArgs: input,
 		Targets:  &[]string{},
+		Linked:   &f,
+		IsDir:    &f,
 	}
 	if preview {
 		return name, *state, nil
 	}
 
-	source, err := os.Lstat(*input.Source)
-	if err != nil {
-		return "", *state, err
-	}
-	if input.Recursive != nil && *input.Recursive == true && source.IsDir() {
-		_, err := os.Lstat(*input.Target)
-		if err != nil {
-			return "", *state, err
-		}
-		if err := state.linkFile(source, *input.Target, ""); err != nil {
-			return "", *state, err
-		}
-	} else {
-		if err := os.Link(*input.Source, *input.Target); err != nil {
-			return "", *state, err
-		}
-		*state.Targets = append(*state.Targets, *input.Target)
-	}
-
-	if err := state.stats(input); err != nil {
-		return name, *state, nil
+	if err := state.link(ctx); err != nil {
+		return name, LinkState{}, err
 	}
 
 	return name, *state, nil
@@ -116,14 +107,12 @@ func (l *Link) Read(ctx p.Context, id string, inputs LinkArgs, state LinkState) 
 	if err != nil {
 		return "", LinkArgs{}, LinkState{}, err
 	}
-	if sExists.IsDir() {
-		b := true
-		state.IsDir = &b
-	} else {
-		b := false
-		state.IsDir = &b
-	}
+	f := false
+	state.Linked = &f
+	isDir := sExists.IsDir()
+	state.IsDir = &isDir
 	exists, err := os.Lstat(*inputs.Target)
+	ctx.Logf(diag.Warning, "target file", exists.Mode())
 	if err != nil {
 		state.Target = nil
 	} else {
@@ -150,49 +139,15 @@ func (l *Link) Update(ctx p.Context, name string, olds LinkState, news LinkArgs,
 		IsDir:    olds.IsDir,
 		Targets:  olds.Targets,
 	}
-	recursive := news.Recursive != nil && *news.Recursive
 
 	if preview {
 		return *state, nil
 	}
 
-	oldTargets := *state.Targets
-	var isDir bool
-	file, err := os.Lstat(*news.Source)
-	if err != nil {
-		return *state, err
-	}
-	if file.IsDir() {
-		isDir = true
-	} else {
-		isDir = false
+	if err := state.link(ctx); err != nil {
+		return LinkState{}, err
 	}
 
-	// if we are recursively linking files in a directory
-	// then we need to do the update
-	if isDir && recursive {
-		source, err := os.Lstat(*news.Source)
-		_, err = os.Lstat(*news.Target)
-		if err != nil {
-			return *state, err
-		}
-		if err := state.linkFile(source, *news.Target, ""); err != nil {
-			return *state, err
-		}
-		state.stats(news)
-		removeOld(oldTargets, *state.Targets)
-		return *state, nil
-	} else {
-		// make new link
-		// first remove the old link
-		if err := os.Remove(*news.Target); err != nil && !os.IsNotExist(err) {
-			return LinkState{}, err
-		}
-		if err := os.Link(*news.Source, *news.Target); err != nil {
-			return LinkState{}, err
-		}
-	}
-	state.stats(news)
 	return *state, nil
 }
 
@@ -208,28 +163,63 @@ func (l *Link) Delete(ctx p.Context, id string, props LinkState) error {
 	return nil
 }
 
+func (l *LinkState) link(ctx p.Context) error {
+	source, err := os.Lstat(*l.Source)
+	if err != nil {
+		return err
+	}
+	if l.Recursive != nil && !*l.Recursive && source.IsDir() {
+		_, err := os.Lstat(*l.Target)
+		if err != nil {
+			return err
+		}
+		if err := l.linkFile(ctx, *l.Source, *l.Target); err != nil {
+			return err
+		}
+	} else {
+		if err := os.Symlink(*l.Source, *l.Target); err != nil {
+			return err
+		}
+		tfTargets := append(*l.Targets, *l.Target)
+		l.Targets = &tfTargets
+	}
+
+	if err := l.stats(l.LinkArgs); err != nil {
+		return err
+	}
+	return nil
+}
+
 // TODO: currently this doesn't handle errors very well. If we fail on one file
 // we end up in a bad state where some things have been linked while others are not
 // TODO: handle name collisions
-func (l *LinkState) linkFile(source fs.FileInfo, target string, parent string) error {
-	p := path.Join(parent, source.Name())
-	if source.IsDir() {
-		entries, err := os.ReadDir(p)
+func (l *LinkState) linkFile(ctx p.Context, source string, target string) error {
+	s, err := os.Lstat(source)
+	if err != nil {
+		return err
+	}
+	var tfTargets []string
+	if s.IsDir() {
+		entries, err := os.ReadDir(source)
 		if err != nil {
 			return err
 		}
 		for _, de := range entries {
-			info, err := de.Info()
-			if err != nil {
+			p := filepath.Join(source, de.Name())
+			t := filepath.Join(target, de.Name())
+			if err := os.Symlink(p, t); err != nil {
 				return err
 			}
-			return l.linkFile(info, target, p)
+			tfTargets = append(tfTargets, *l.Targets...)
 		}
+	} else {
+		if err := os.Symlink(source, target); err != nil {
+			return err
+		}
+
+		tfTargets = append(tfTargets, *l.Targets...)
 	}
-	if err := os.Link(source.Name(), p); err != nil {
-		return err
-	}
-	*l.Targets = append(*l.Targets, p)
+	l.Targets = &tfTargets
 	return nil
 }
 
@@ -275,6 +265,13 @@ func (l *LinkState) stats(input LinkArgs) error {
 		l.IsDir = &t
 	} else {
 		l.IsDir = &f
+	}
+	file, err = os.Lstat(*input.Target)
+	if err != nil {
+		return err
+	}
+	if file.Mode() == os.ModeSymlink {
+		l.Linked = &t
 	}
 	return nil
 }

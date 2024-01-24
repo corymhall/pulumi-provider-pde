@@ -20,11 +20,11 @@ type GitHubRelease struct{}
 
 type GitHubReleaseInputs struct {
 	GitHubBaseInputs
-	AssetName   *string `pulumi:"assetName,optional"`
-	Executable  *string `pulumi:"executable,optional"`
-	Version     *string `pulumi:"version,optional"`
-	BinLocation *string `pulumi:"binLocation,optional"`
-	BinFolder   *string `pulumi:"binFolder,optional"`
+	AssetName      *string `pulumi:"assetName,optional"`
+	Executable     *string `pulumi:"executable,optional"`
+	ReleaseVersion *string `pulumi:"releaseVersion,optional"`
+	BinLocation    *string `pulumi:"binLocation,optional"`
+	BinFolder      *string `pulumi:"binFolder,optional"`
 }
 
 type GitHubReleaseOutputs struct {
@@ -63,9 +63,9 @@ func (l *GitHubRelease) Diff(ctx p.Context, id string, olds GitHubReleaseOutputs
 		diff["updateCommands"] = p.PropertyDiff{Kind: p.Update}
 	}
 
-	if (news.Version == nil && news.Version != olds.Version) ||
-		(news.Version != nil && *news.Version != *olds.Version) {
-		diff["version"] = p.PropertyDiff{Kind: p.UpdateReplace}
+	if (news.ReleaseVersion == nil && news.ReleaseVersion != olds.ReleaseVersion) ||
+		(news.ReleaseVersion != nil && *news.ReleaseVersion != *olds.ReleaseVersion) {
+		diff["releaseVersion"] = p.PropertyDiff{Kind: p.UpdateReplace}
 	}
 
 	return p.DiffResponse{
@@ -82,13 +82,13 @@ func (l *GitHubRelease) Create(ctx p.Context, name string, input GitHubReleaseIn
 	}
 
 	if input.AssetName != nil {
-		downloadUrl, err := getReleaseDownloadURL(ctx, github.NewClient(nil), *input.Org, *input.Repo, *input.Version, *input.AssetName)
+		downloadUrl, err := getReleaseDownloadURL(ctx, github.NewClient(nil), *input.Org, *input.Repo, *input.ReleaseVersion, *input.AssetName)
 		if err != nil {
-			return "", *state, err
+			return "", GitHubReleaseOutputs{}, err
 		}
 		state.DownloadURL = &downloadUrl
 	} else {
-		return "", *state, errors.New("assetName not defined, something went wrong!")
+		return "", GitHubReleaseOutputs{}, errors.New("assetName not defined, something went wrong!")
 	}
 
 	if preview {
@@ -100,7 +100,7 @@ func (l *GitHubRelease) Create(ctx p.Context, name string, input GitHubReleaseIn
 		commands = append(commands, *input.InstallCommands...)
 	}
 	if err := state.createOrUpdate(ctx, commands, &input); err != nil {
-		return "", *state, err
+		return "", GitHubReleaseOutputs{}, err
 	}
 
 	return name, *state, nil
@@ -120,13 +120,12 @@ func (o *GitHubReleaseOutputs) createOrUpdate(ctx p.Context, commands []string, 
 	}
 
 	exName := input.Repo
+	ex := false
+	// if the user provided a path to the executable, then use the last part of that path as the executable name
+	// e.g. if they provided /usr/local/bin/terraform, then use terraform as the executable name
 	if input.Executable != nil {
 		parts := strings.Split(*input.Executable, "/")
 		exName = &parts[len(parts)-1]
-		o.Executable = exName
-	}
-	ex := false
-	if input.Executable != nil {
 		ex = true
 	}
 	shellInputs := &ShellInputs{
@@ -134,7 +133,7 @@ func (o *GitHubReleaseOutputs) createOrUpdate(ctx p.Context, commands []string, 
 		BinLocation:     input.BinLocation,
 		InstallCommands: input.InstallCommands,
 		ProgramName:     exName,
-		DownloadUrl:     o.DownloadURL,
+		DownloadURL:     o.DownloadURL,
 		Executable:      &ex,
 	}
 
@@ -181,7 +180,14 @@ func getReleaseDownloadURL(ctx p.Context, client *github.Client, org, repo, tag,
 	return "", nil
 }
 
-func getReleaseAssetName(ctx p.Context, client *github.Client, org, repo, tag string) (string, error) {
+func getReleaseAssetName(
+	ctx p.Context,
+	client *github.Client,
+	org,
+	repo,
+	tag,
+	assetName string,
+) (string, error) {
 	release, _, err := client.Repositories.GetReleaseByTag(ctx, org, repo, tag)
 	if err != nil {
 		return "", err
@@ -192,16 +198,23 @@ func getReleaseAssetName(ctx p.Context, client *github.Client, org, repo, tag st
 	// linux/arm64
 	oss := runtime.GOOS
 	arch := runtime.GOARCH
+	// loop over the release assets and try to find the correct one based on
+	// the runtime and arch
 	for _, ra := range release.Assets {
-		assetName := strings.ToLower(*ra.Name)
-		regx := fmt.Sprintf(".*%s.*%s", oss, arch)
-		if ok, err := regexp.MatchString(regx, assetName); ok {
+		name := strings.ToLower(*ra.Name)
+		// if the user has provided their own regex
+		if ok, err := regexp.MatchString(assetName, name); ok && err == nil {
+			return *ra.Name, nil
+		}
+
+		// TODO: make a better regex
+		regx := fmt.Sprintf(".*%s.*(%s)?", oss, arch)
+		if ok, err := regexp.MatchString(regx, name); ok {
 			if err != nil {
 				return "", err
 			}
 			return *ra.Name, nil
 		}
-
 	}
 	return "", nil
 }
@@ -209,13 +222,21 @@ func getReleaseAssetName(ctx p.Context, client *github.Client, org, repo, tag st
 func (l *GitHubRelease) Read(ctx p.Context, id string, inputs GitHubReleaseInputs, state GitHubReleaseOutputs) (
 	canonicalID string, normalizedInputs GitHubReleaseInputs, normalizedState GitHubReleaseOutputs, err error) {
 
-	if inputs.Version != nil {
+	if inputs.ReleaseVersion != nil {
 		return id, inputs, state, nil
 	}
+	client := github.NewClient(nil)
+	if val, ok := os.LookupEnv("GITHUB_TOKEN"); ok {
+		client.WithAuthToken(val)
+	}
 
-	// TODO: implement import
+	release, _, err := client.Repositories.GetLatestRelease(ctx, *inputs.Org, *inputs.Repo)
+	if err != nil {
+		return "", GitHubReleaseInputs{}, GitHubReleaseOutputs{}, err
+	}
+	state.ReleaseVersion = release.TagName
 
-	return "", inputs, state, nil
+	return id, inputs, state, nil
 }
 
 func (l *GitHubRelease) Check(ctx p.Context, name string, oldInputs, newInputs resource.PropertyMap) (GitHubReleaseInputs, []p.CheckFailure, error) {
@@ -226,54 +247,37 @@ func (l *GitHubRelease) Check(ctx p.Context, name string, oldInputs, newInputs r
 	org := newInputs["org"].StringValue()
 	repo := newInputs["repo"].StringValue()
 	failures := []p.CheckFailure{}
-	if _, ok := newInputs["version"]; !ok {
+	var version string
+	if _, ok := newInputs["releaseVersion"]; !ok {
 		release, _, err := client.Repositories.GetLatestRelease(ctx, org, repo)
 		if err != nil {
-			failures = append(failures, p.CheckFailure{Property: "version", Reason: err.Error()})
-		} else {
-			newInputs["version"] = resource.NewStringProperty(*release.TagName)
-			assetName, err := getReleaseAssetName(ctx, client, org, repo, *release.TagName)
-			if err != nil {
-				failures = append(failures, p.CheckFailure{Property: "version", Reason: err.Error()})
-			} else {
-				if _, ok := newInputs["assetName"]; !ok {
-					newInputs["assetName"] = resource.NewStringProperty(assetName)
-				} else if assetName != newInputs["assetName"].StringValue() {
-					failures = append(failures, p.CheckFailure{
-						Property: "assetName",
-						Reason:   fmt.Sprintf("provided asset name %s not available for version %s", newInputs["assetName"].StringValue(), *release.TagName),
-					})
-
-				}
-			}
+			failures = append(failures, p.CheckFailure{Property: "releaseVersion", Reason: err.Error()})
+			return GitHubReleaseInputs{}, failures, nil
 		}
+		newInputs["releaseVersion"] = resource.NewStringProperty(*release.TagName)
+		version = *release.TagName
 	} else {
-		version := newInputs["version"].StringValue()
-		assetName, err := getReleaseAssetName(ctx, client, org, repo, version)
-		if err != nil {
-			failures = append(failures, p.CheckFailure{
-				Property: "version", Reason: err.Error(),
-			})
-		}
-		if _, ok := newInputs["assetName"]; !ok {
-			newInputs["assetName"] = resource.NewStringProperty(assetName)
-		} else if assetName != newInputs["assetName"].StringValue() {
-			failures = append(failures, p.CheckFailure{
-				Property: "assetName",
-				Reason:   fmt.Sprintf("provided asset name %s not available for version %s", newInputs["assetName"].StringValue(), version),
-			})
-
-		}
+		version = newInputs["releaseVersion"].StringValue()
 	}
+	var inputAsssetName string
+	if val, ok := newInputs["assetName"]; ok {
+		inputAsssetName = val.StringValue()
+	}
+	assetName, err := getReleaseAssetName(ctx, client, org, repo, version, inputAsssetName)
+	if err != nil {
+		failures = append(failures, p.CheckFailure{Property: "releaseVersion", Reason: err.Error()})
+		return GitHubReleaseInputs{}, failures, nil
+	}
+	newInputs["assetName"] = resource.NewStringProperty(assetName)
 
 	if _, ok := newInputs["binLocation"]; !ok {
 		home, err := os.UserHomeDir()
 		if err != nil {
 			failures = append(failures, p.CheckFailure{Property: "binLocation", Reason: err.Error()})
-		} else {
-			binLocation := path.Join(home, ".local", "bin")
-			newInputs["binLocation"] = resource.NewStringProperty(binLocation)
+			return GitHubReleaseInputs{}, failures, nil
 		}
+		binLocation := path.Join(home, ".local", "bin")
+		newInputs["binLocation"] = resource.NewStringProperty(binLocation)
 	}
 
 	inputs, fails, err := infer.DefaultCheck[GitHubReleaseInputs](newInputs)
@@ -287,13 +291,13 @@ func (l *GitHubRelease) Update(ctx p.Context, name string, olds GitHubReleaseOut
 		Locations:           olds.Locations,
 	}
 	if news.AssetName != nil {
-		downloadUrl, err := getReleaseDownloadURL(ctx, github.NewClient(nil), *news.Org, *news.Repo, *news.Version, *news.AssetName)
+		downloadUrl, err := getReleaseDownloadURL(ctx, github.NewClient(nil), *news.Org, *news.Repo, *news.ReleaseVersion, *news.AssetName)
 		if err != nil {
-			return *state, err
+			return GitHubReleaseOutputs{}, err
 		}
 		state.DownloadURL = &downloadUrl
 	} else {
-		return *state, errors.New("assetName not defined, something went wrong!")
+		return GitHubReleaseOutputs{}, errors.New("assetName not defined, something went wrong!")
 	}
 
 	if preview {
@@ -307,7 +311,7 @@ func (l *GitHubRelease) Update(ctx p.Context, name string, olds GitHubReleaseOut
 		commands = *news.InstallCommands
 	}
 	if err := state.createOrUpdate(ctx, commands, &news); err != nil {
-		return *state, err
+		return GitHubReleaseOutputs{}, err
 	}
 
 	return *state, nil

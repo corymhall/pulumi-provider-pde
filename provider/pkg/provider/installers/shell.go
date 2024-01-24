@@ -27,9 +27,9 @@ var _ = (infer.CustomCheck[ShellInputs])((*Shell)(nil))
 type ShellInputs struct {
 	BaseInputs
 	CommandInputs
-	InstallCommands *[]string `pulumi:"installCommands"`
+	InstallCommands *[]string `pulumi:"installCommands,optional"`
 	ProgramName     *string   `pulumi:"programName"`
-	DownloadUrl     *string   `pulumi:"downloadURL"`
+	DownloadURL     *string   `pulumi:"downloadURL"`
 	VersionCommand  *string   `pulumi:"versionCommand,optional"`
 	BinLocation     *string   `pulumi:"binLocation,optional"`
 	Executable      *bool     `pulumi:"executable,optional"`
@@ -39,7 +39,7 @@ type ShellOutputs struct {
 	ShellInputs
 	CommandOutputs
 	BaseOutputs
-	Location *string `pulumi:"location"`
+	Location *string `pulumi:"location,optional"`
 }
 
 func (l *Shell) Diff(ctx p.Context, id string, olds ShellOutputs, news ShellInputs) (p.DiffResponse, error) {
@@ -48,16 +48,36 @@ func (l *Shell) Diff(ctx p.Context, id string, olds ShellOutputs, news ShellInpu
 	if *news.BinLocation != *olds.BinLocation {
 		diff["binLocation"] = p.PropertyDiff{Kind: p.UpdateReplace}
 	}
-	if *news.DownloadUrl != *olds.DownloadUrl {
-		diff["downloadUrl"] = p.PropertyDiff{Kind: p.UpdateReplace}
+	if *news.DownloadURL != *olds.DownloadURL {
+		diff["downloadURL"] = p.PropertyDiff{Kind: p.UpdateReplace}
 	}
-	if news.Executable != olds.Executable {
+	if (news.Executable != nil && olds.Executable == nil) || (news.Executable == nil && olds.Executable != nil) {
 		diff["executable"] = p.PropertyDiff{Kind: p.UpdateReplace}
 	}
-	if news.InstallCommands != olds.InstallCommands {
+	if (news.Executable != nil && olds.Executable != nil) && *news.Executable != *olds.Executable {
+		diff["executable"] = p.PropertyDiff{Kind: p.UpdateReplace}
+	}
+	var newInstall string
+	var oldInstall string
+	if news.InstallCommands != nil {
+		newInstall = strings.Join(*news.InstallCommands, " && ")
+	}
+	if olds.InstallCommands != nil {
+		oldInstall = strings.Join(*olds.InstallCommands, " && ")
+	}
+
+	if newInstall != oldInstall {
 		diff["installCommands"] = p.PropertyDiff{Kind: p.UpdateReplace}
 	}
-	if news.UpdateCommands != olds.UpdateCommands {
+	var newUninstall string
+	var oldUninstall string
+	if news.UninstallCommands != nil {
+		newUninstall = strings.Join(*news.UninstallCommands, " && ")
+	}
+	if olds.UninstallCommands != nil {
+		oldUninstall = strings.Join(*olds.UninstallCommands, " && ")
+	}
+	if newUninstall != oldUninstall {
 		diff["updateCommands"] = p.PropertyDiff{Kind: p.UpdateReplace}
 	}
 	if *news.ProgramName != *olds.ProgramName {
@@ -81,7 +101,7 @@ func (l *Shell) Create(ctx p.Context, name string, input ShellInputs, preview bo
 	}
 
 	if err := state.createOrUpdate(ctx, input, *input.InstallCommands); err != nil {
-		return "", *state, err
+		return "", ShellOutputs{}, err
 	}
 	return name, *state, nil
 }
@@ -92,12 +112,12 @@ func (l *Shell) Read(ctx p.Context, id string, inputs ShellInputs, state ShellOu
 	if inputs.VersionCommand != nil {
 		output, err := state.run(ctx, *inputs.VersionCommand, os.TempDir())
 		if err != nil {
-			return "", inputs, state, err
+			return "", ShellInputs{}, ShellOutputs{}, err
 		}
 		state.Version = &output
 	}
 
-	return *inputs.ProgramName, inputs, state, nil
+	return id, inputs, state, nil
 }
 
 func (l *Shell) Check(ctx p.Context, name string, oldInputs, newInputs resource.PropertyMap) (ShellInputs, []p.CheckFailure, error) {
@@ -106,10 +126,10 @@ func (l *Shell) Check(ctx p.Context, name string, oldInputs, newInputs resource.
 		home, err := os.UserHomeDir()
 		if err != nil {
 			fails = append(fails, p.CheckFailure{Property: "binLocation", Reason: err.Error()})
-		} else {
-			binLocation := path.Join(home, ".local", "bin")
-			newInputs["binLocation"] = resource.NewStringProperty(binLocation)
+			return ShellInputs{}, fails, nil
 		}
+		binLocation := path.Join(home, ".local", "bin")
+		newInputs["binLocation"] = resource.NewStringProperty(binLocation)
 	}
 
 	inputs, failures, err := infer.DefaultCheck[ShellInputs](newInputs)
@@ -118,7 +138,9 @@ func (l *Shell) Check(ctx p.Context, name string, oldInputs, newInputs resource.
 
 func (l *Shell) Update(ctx p.Context, name string, olds ShellOutputs, news ShellInputs, preview bool) (ShellOutputs, error) {
 	state := &ShellOutputs{
-		ShellInputs: news,
+		ShellInputs:    news,
+		Location:       olds.Location,
+		CommandOutputs: olds.CommandOutputs,
 		BaseOutputs: BaseOutputs{
 			Version: olds.Version,
 		},
@@ -133,7 +155,7 @@ func (l *Shell) Update(ctx p.Context, name string, olds ShellOutputs, news Shell
 		commands = *news.InstallCommands
 	}
 	if err := state.createOrUpdate(ctx, news, commands); err != nil {
-		return *state, err
+		return ShellOutputs{}, err
 	}
 	return *state, nil
 }
@@ -154,7 +176,7 @@ func (l *Shell) Delete(ctx p.Context, id string, props ShellOutputs) error {
 
 func (s *ShellOutputs) createOrUpdate(ctx p.Context, input ShellInputs, commands []string) error {
 	dir := os.TempDir()
-	_, err := s.run(ctx, fmt.Sprintf("curl -OL %s", *input.DownloadUrl), dir)
+	_, err := s.run(ctx, fmt.Sprintf("curl -OL %s", *input.DownloadURL), dir)
 	if err != nil {
 		return err
 	}
