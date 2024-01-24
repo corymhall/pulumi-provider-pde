@@ -47,8 +47,40 @@ func (l *GitHubRelease) Diff(ctx p.Context, id string, olds GitHubReleaseOutputs
 		diff["assetName"] = p.PropertyDiff{Kind: p.UpdateReplace}
 	}
 
-	if news.InstallCommands != olds.InstallCommands {
+	var newInstall string
+	var oldInstall string
+	if news.InstallCommands != nil {
+		newInstall = strings.Join(*news.InstallCommands, " && ")
+	}
+	if olds.InstallCommands != nil {
+		oldInstall = strings.Join(*olds.InstallCommands, " && ")
+	}
+
+	if newInstall != oldInstall {
 		diff["installCommands"] = p.PropertyDiff{Kind: p.UpdateReplace}
+	}
+	var newUninstall string
+	var oldUninstall string
+	if news.UninstallCommands != nil {
+		newUninstall = strings.Join(*news.UninstallCommands, " && ")
+	}
+	if olds.UninstallCommands != nil {
+		oldUninstall = strings.Join(*olds.UninstallCommands, " && ")
+	}
+	if newUninstall != oldUninstall {
+		diff["uninstallCommands"] = p.PropertyDiff{Kind: p.UpdateReplace}
+	}
+
+	var newUpdate string
+	var oldUpdate string
+	if news.UpdateCommands != nil {
+		newUpdate = strings.Join(*news.UpdateCommands, " && ")
+	}
+	if olds.UpdateCommands != nil {
+		oldUpdate = strings.Join(*olds.UpdateCommands, " && ")
+	}
+	if newUpdate != oldUpdate {
+		diff["updateCommands"] = p.PropertyDiff{Kind: p.UpdateReplace}
 	}
 
 	if *news.Org != *olds.Org {
@@ -57,10 +89,6 @@ func (l *GitHubRelease) Diff(ctx p.Context, id string, olds GitHubReleaseOutputs
 
 	if *news.Repo != *olds.Repo {
 		diff["repo"] = p.PropertyDiff{Kind: p.UpdateReplace}
-	}
-
-	if news.UpdateCommands != olds.UpdateCommands {
-		diff["updateCommands"] = p.PropertyDiff{Kind: p.Update}
 	}
 
 	if (news.ReleaseVersion == nil && news.ReleaseVersion != olds.ReleaseVersion) ||
@@ -82,7 +110,11 @@ func (l *GitHubRelease) Create(ctx p.Context, name string, input GitHubReleaseIn
 	}
 
 	if input.AssetName != nil {
-		downloadUrl, err := getReleaseDownloadURL(ctx, github.NewClient(nil), *input.Org, *input.Repo, *input.ReleaseVersion, *input.AssetName)
+		client := github.NewClient(nil)
+		if val, ok := os.LookupEnv("GITHUB_TOKEN"); ok {
+			client.WithAuthToken(val)
+		}
+		downloadUrl, err := getReleaseDownloadURL(ctx, client, *input.Org, *input.Repo, *input.ReleaseVersion, *input.AssetName)
 		if err != nil {
 			return "", GitHubReleaseOutputs{}, err
 		}
@@ -291,7 +323,11 @@ func (l *GitHubRelease) Update(ctx p.Context, name string, olds GitHubReleaseOut
 		Locations:           olds.Locations,
 	}
 	if news.AssetName != nil {
-		downloadUrl, err := getReleaseDownloadURL(ctx, github.NewClient(nil), *news.Org, *news.Repo, *news.ReleaseVersion, *news.AssetName)
+		client := github.NewClient(nil)
+		if val, ok := os.LookupEnv("GITHUB_TOKEN"); ok {
+			client.WithAuthToken(val)
+		}
+		downloadUrl, err := getReleaseDownloadURL(ctx, client, *news.Org, *news.Repo, *news.ReleaseVersion, *news.AssetName)
 		if err != nil {
 			return GitHubReleaseOutputs{}, err
 		}

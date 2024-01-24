@@ -41,11 +41,11 @@ func (c *CommandOutputs) run(ctx p.Context, command, dir string) (string, error)
 	cmd.Stdout = io.MultiWriter(&stdoutbuf, &stdouterrwriter, w)
 	cmd.Stderr = io.MultiWriter(&stderrbuf, &stdouterrwriter, w)
 	cmd.Env = os.Environ()
-	if c.Environment != nil {
-		for k, v := range *c.Environment {
-			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
-		}
-	}
+	// if c.Environment != nil {
+	// 	for k, v := range *c.Environment {
+	// 		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
+	// 	}
+	// }
 
 	stdouterrch := make(chan struct{})
 	go util.CopyOutput(ctx, r, stdouterrch, diag.Info)

@@ -168,7 +168,7 @@ func (l *LinkState) link(ctx p.Context) error {
 	if err != nil {
 		return err
 	}
-	if l.Recursive != nil && !*l.Recursive && source.IsDir() {
+	if l.Recursive != nil && *l.Recursive && source.IsDir() {
 		_, err := os.Lstat(*l.Target)
 		if err != nil {
 			return err

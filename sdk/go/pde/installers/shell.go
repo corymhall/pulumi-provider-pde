@@ -17,8 +17,10 @@ type Shell struct {
 
 	BinLocation       pulumi.StringPtrOutput   `pulumi:"binLocation"`
 	DownloadURL       pulumi.StringOutput      `pulumi:"downloadURL"`
+	Environment       pulumi.StringMapOutput   `pulumi:"environment"`
 	Executable        pulumi.BoolPtrOutput     `pulumi:"executable"`
 	InstallCommands   pulumi.StringArrayOutput `pulumi:"installCommands"`
+	Interpreter       pulumi.StringArrayOutput `pulumi:"interpreter"`
 	Location          pulumi.StringPtrOutput   `pulumi:"location"`
 	ProgramName       pulumi.StringOutput      `pulumi:"programName"`
 	UninstallCommands pulumi.StringArrayOutput `pulumi:"uninstallCommands"`
@@ -36,6 +38,9 @@ func NewShell(ctx *pulumi.Context,
 
 	if args.DownloadURL == nil {
 		return nil, errors.New("invalid value for required argument 'DownloadURL'")
+	}
+	if args.InstallCommands == nil {
+		return nil, errors.New("invalid value for required argument 'InstallCommands'")
 	}
 	if args.ProgramName == nil {
 		return nil, errors.New("invalid value for required argument 'ProgramName'")
@@ -194,12 +199,20 @@ func (o ShellOutput) DownloadURL() pulumi.StringOutput {
 	return o.ApplyT(func(v *Shell) pulumi.StringOutput { return v.DownloadURL }).(pulumi.StringOutput)
 }
 
+func (o ShellOutput) Environment() pulumi.StringMapOutput {
+	return o.ApplyT(func(v *Shell) pulumi.StringMapOutput { return v.Environment }).(pulumi.StringMapOutput)
+}
+
 func (o ShellOutput) Executable() pulumi.BoolPtrOutput {
 	return o.ApplyT(func(v *Shell) pulumi.BoolPtrOutput { return v.Executable }).(pulumi.BoolPtrOutput)
 }
 
 func (o ShellOutput) InstallCommands() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v *Shell) pulumi.StringArrayOutput { return v.InstallCommands }).(pulumi.StringArrayOutput)
+}
+
+func (o ShellOutput) Interpreter() pulumi.StringArrayOutput {
+	return o.ApplyT(func(v *Shell) pulumi.StringArrayOutput { return v.Interpreter }).(pulumi.StringArrayOutput)
 }
 
 func (o ShellOutput) Location() pulumi.StringPtrOutput {

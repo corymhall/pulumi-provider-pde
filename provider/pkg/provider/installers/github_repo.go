@@ -51,8 +51,17 @@ func (l *GitHubRepo) Diff(ctx p.Context, id string, olds GitHubRepoOutputs, news
 	if news.FolderName == nil || *news.FolderName != *olds.FolderName {
 		diff["folderName"] = p.PropertyDiff{Kind: p.UpdateReplace}
 	}
-	if news.InstallCommands != olds.InstallCommands {
-		diff["installCommands"] = p.PropertyDiff{Kind: p.Update}
+	var newInstall string
+	var oldInstall string
+	if news.InstallCommands != nil {
+		newInstall = strings.Join(*news.InstallCommands, " && ")
+	}
+	if olds.InstallCommands != nil {
+		oldInstall = strings.Join(*olds.InstallCommands, " && ")
+	}
+
+	if newInstall != oldInstall {
+		diff["installCommands"] = p.PropertyDiff{Kind: p.UpdateReplace}
 	}
 	if *news.Org != *olds.Org {
 		diff["org"] = p.PropertyDiff{Kind: p.UpdateReplace}
@@ -62,8 +71,16 @@ func (l *GitHubRepo) Diff(ctx p.Context, id string, olds GitHubRepoOutputs, news
 		diff["repo"] = p.PropertyDiff{Kind: p.UpdateReplace}
 	}
 
-	if news.UpdateCommands != olds.UpdateCommands {
-		diff["updateCommands"] = p.PropertyDiff{Kind: p.Update}
+	var newUpdate string
+	var oldUpdate string
+	if news.UpdateCommands != nil {
+		newUpdate = strings.Join(*news.UpdateCommands, " && ")
+	}
+	if olds.UpdateCommands != nil {
+		oldUpdate = strings.Join(*olds.UpdateCommands, " && ")
+	}
+	if newUpdate != oldUpdate {
+		diff["updateCommands"] = p.PropertyDiff{Kind: p.UpdateReplace}
 	}
 
 	return p.DiffResponse{

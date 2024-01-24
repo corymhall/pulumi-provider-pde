@@ -1,11 +1,7 @@
 package installers
 
 import (
-	// "errors"
 	"fmt"
-	"io"
-	"net/http"
-	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -26,13 +22,14 @@ var _ = (infer.CustomCheck[ShellInputs])((*Shell)(nil))
 
 type ShellInputs struct {
 	BaseInputs
-	CommandInputs
-	InstallCommands *[]string `pulumi:"installCommands,optional"`
-	ProgramName     *string   `pulumi:"programName"`
-	DownloadURL     *string   `pulumi:"downloadURL"`
-	VersionCommand  *string   `pulumi:"versionCommand,optional"`
-	BinLocation     *string   `pulumi:"binLocation,optional"`
-	Executable      *bool     `pulumi:"executable,optional"`
+	InstallCommands *[]string          `pulumi:"installCommands"`
+	ProgramName     *string            `pulumi:"programName"`
+	DownloadURL     *string            `pulumi:"downloadURL"`
+	Environment     *map[string]string `pulumi:"environment,optional"`
+	Interpreter     *[]string          `pulumi:"interpreter,optional"`
+	VersionCommand  *string            `pulumi:"versionCommand,optional"`
+	BinLocation     *string            `pulumi:"binLocation,optional"`
+	Executable      *bool              `pulumi:"executable,optional"`
 }
 
 type ShellOutputs struct {
@@ -78,6 +75,18 @@ func (l *Shell) Diff(ctx p.Context, id string, olds ShellOutputs, news ShellInpu
 		oldUninstall = strings.Join(*olds.UninstallCommands, " && ")
 	}
 	if newUninstall != oldUninstall {
+		diff["uninstallCommands"] = p.PropertyDiff{Kind: p.UpdateReplace}
+	}
+
+	var newUpdate string
+	var oldUpdate string
+	if news.UpdateCommands != nil {
+		newUpdate = strings.Join(*news.UpdateCommands, " && ")
+	}
+	if olds.UpdateCommands != nil {
+		oldUpdate = strings.Join(*olds.UpdateCommands, " && ")
+	}
+	if newUpdate != oldUpdate {
 		diff["updateCommands"] = p.PropertyDiff{Kind: p.UpdateReplace}
 	}
 	if *news.ProgramName != *olds.ProgramName {
@@ -164,12 +173,15 @@ func (l *Shell) Delete(ctx p.Context, id string, props ShellOutputs) error {
 	if props.UninstallCommands != nil {
 		_, err := props.run(ctx, strings.Join(*props.UninstallCommands, " && "), "")
 		if err != nil {
-			return err
+			ctx.Logf("error running uninstall commands: %s", err.Error())
+			return nil
 		}
 
 	}
-	if err := os.Remove(*props.Location); err != nil && !os.IsNotExist(err) {
-		return err
+	if props.Location != nil {
+		if err := os.Remove(*props.Location); err != nil && !os.IsNotExist(err) {
+			return err
+		}
 	}
 	return nil
 }
@@ -209,29 +221,4 @@ func (s *ShellOutputs) createOrUpdate(ctx p.Context, input ShellInputs, commands
 		s.Version = &dv
 	}
 	return nil
-}
-
-func downloadTmpFile(downloadUrl string) (string, error) {
-	fileURL, err := url.Parse(downloadUrl)
-	p := fileURL.Path
-	segments := strings.Split(p, "/")
-	fileName := segments[len(segments)-1]
-	resp, err := http.Get(downloadUrl)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	name := path.Join(os.TempDir(), fileName)
-	out, err := os.Create(name)
-	if err != nil {
-		return "", err
-	}
-	defer out.Close()
-
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		return "", err
-	}
-	return name, err
 }
