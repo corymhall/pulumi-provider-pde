@@ -12,23 +12,42 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
+// Install a program from a GitHub release
 type GitHubRelease struct {
 	pulumi.CustomResourceState
 
-	AssetName         pulumi.StringPtrOutput   `pulumi:"assetName"`
-	BinFolder         pulumi.StringPtrOutput   `pulumi:"binFolder"`
-	BinLocation       pulumi.StringPtrOutput   `pulumi:"binLocation"`
-	DownloadURL       pulumi.StringOutput      `pulumi:"downloadURL"`
-	Environment       pulumi.StringMapOutput   `pulumi:"environment"`
-	Executable        pulumi.StringPtrOutput   `pulumi:"executable"`
-	InstallCommands   pulumi.StringArrayOutput `pulumi:"installCommands"`
-	Interpreter       pulumi.StringArrayOutput `pulumi:"interpreter"`
-	Locations         pulumi.StringArrayOutput `pulumi:"locations"`
-	Org               pulumi.StringOutput      `pulumi:"org"`
-	ReleaseVersion    pulumi.StringPtrOutput   `pulumi:"releaseVersion"`
-	Repo              pulumi.StringOutput      `pulumi:"repo"`
+	// The name of the release asset to install. If this is not provided then
+	// 				the resource will try and find the correct asset name to install. Supports regex
+	AssetName pulumi.StringPtrOutput `pulumi:"assetName"`
+	// Sometimes release assets contain a folder containing
+	// 				program binaries which can just be copied. If that is the case, then provide the
+	// 				location here. This will copy all files in the directory to the bin_location
+	BinFolder pulumi.StringPtrOutput `pulumi:"binFolder"`
+	// The location to put the program. Defaults to $HOME/.local/bin
+	BinLocation pulumi.StringPtrOutput `pulumi:"binLocation"`
+	// The URL of the GitHub release asset
+	DownloadURL pulumi.StringOutput `pulumi:"downloadURL"`
+	// The environment variables to set when running the commands
+	Environment pulumi.StringMapOutput `pulumi:"environment"`
+	// The name of the executable to create a symlink for. If not provided then the executable name will be the same as the repo name
+	Executable pulumi.StringPtrOutput `pulumi:"executable"`
+	// The commands to run to install the program
+	InstallCommands pulumi.StringArrayOutput `pulumi:"installCommands"`
+	// The interpreter to use to run the commands. Defaults to ['/bin/sh', '-c']
+	Interpreter pulumi.StringArrayOutput `pulumi:"interpreter"`
+	// The locations the program was installed to
+	Locations pulumi.StringArrayOutput `pulumi:"locations"`
+	// The GitHub organization the repo belongs to
+	Org pulumi.StringOutput `pulumi:"org"`
+	// The release version to install. If this is not provided then
+	// 				the resource will try and find the latest release version to install.
+	ReleaseVersion pulumi.StringPtrOutput `pulumi:"releaseVersion"`
+	// The GitHub repository name
+	Repo pulumi.StringOutput `pulumi:"repo"`
+	// Optional Commands to run to uninstall the program
 	UninstallCommands pulumi.StringArrayOutput `pulumi:"uninstallCommands"`
-	UpdateCommands    pulumi.StringArrayOutput `pulumi:"updateCommands"`
+	// Optional Commands to run to update the program
+	UpdateCommands pulumi.StringArrayOutput `pulumi:"updateCommands"`
 }
 
 // NewGitHubRelease registers a new resource with the given unique name, arguments, and options.
@@ -77,30 +96,58 @@ func (GitHubReleaseState) ElementType() reflect.Type {
 }
 
 type gitHubReleaseArgs struct {
-	AssetName         *string  `pulumi:"assetName"`
-	BinFolder         *string  `pulumi:"binFolder"`
-	BinLocation       *string  `pulumi:"binLocation"`
-	Executable        *string  `pulumi:"executable"`
-	InstallCommands   []string `pulumi:"installCommands"`
-	Org               string   `pulumi:"org"`
-	ReleaseVersion    *string  `pulumi:"releaseVersion"`
-	Repo              string   `pulumi:"repo"`
+	// The name of the release asset to install. If this is not provided then
+	// 				the resource will try and find the correct asset name to install. Supports regex
+	AssetName *string `pulumi:"assetName"`
+	// Sometimes release assets contain a folder containing
+	// 				program binaries which can just be copied. If that is the case, then provide the
+	// 				location here. This will copy all files in the directory to the bin_location
+	BinFolder *string `pulumi:"binFolder"`
+	// The location to put the program. Defaults to $HOME/.local/bin
+	BinLocation *string `pulumi:"binLocation"`
+	// The name of the executable to create a symlink for. If not provided then the executable name will be the same as the repo name
+	Executable *string `pulumi:"executable"`
+	// The commands to run to install the program
+	InstallCommands []string `pulumi:"installCommands"`
+	// The GitHub organization the repo belongs to
+	Org string `pulumi:"org"`
+	// The release version to install. If this is not provided then
+	// 				the resource will try and find the latest release version to install.
+	ReleaseVersion *string `pulumi:"releaseVersion"`
+	// The GitHub repository name
+	Repo string `pulumi:"repo"`
+	// Optional Commands to run to uninstall the program
 	UninstallCommands []string `pulumi:"uninstallCommands"`
-	UpdateCommands    []string `pulumi:"updateCommands"`
+	// Optional Commands to run to update the program
+	UpdateCommands []string `pulumi:"updateCommands"`
 }
 
 // The set of arguments for constructing a GitHubRelease resource.
 type GitHubReleaseArgs struct {
-	AssetName         pulumi.StringPtrInput
-	BinFolder         pulumi.StringPtrInput
-	BinLocation       pulumi.StringPtrInput
-	Executable        pulumi.StringPtrInput
-	InstallCommands   pulumi.StringArrayInput
-	Org               pulumi.StringInput
-	ReleaseVersion    pulumi.StringPtrInput
-	Repo              pulumi.StringInput
+	// The name of the release asset to install. If this is not provided then
+	// 				the resource will try and find the correct asset name to install. Supports regex
+	AssetName pulumi.StringPtrInput
+	// Sometimes release assets contain a folder containing
+	// 				program binaries which can just be copied. If that is the case, then provide the
+	// 				location here. This will copy all files in the directory to the bin_location
+	BinFolder pulumi.StringPtrInput
+	// The location to put the program. Defaults to $HOME/.local/bin
+	BinLocation pulumi.StringPtrInput
+	// The name of the executable to create a symlink for. If not provided then the executable name will be the same as the repo name
+	Executable pulumi.StringPtrInput
+	// The commands to run to install the program
+	InstallCommands pulumi.StringArrayInput
+	// The GitHub organization the repo belongs to
+	Org pulumi.StringInput
+	// The release version to install. If this is not provided then
+	// 				the resource will try and find the latest release version to install.
+	ReleaseVersion pulumi.StringPtrInput
+	// The GitHub repository name
+	Repo pulumi.StringInput
+	// Optional Commands to run to uninstall the program
 	UninstallCommands pulumi.StringArrayInput
-	UpdateCommands    pulumi.StringArrayInput
+	// Optional Commands to run to update the program
+	UpdateCommands pulumi.StringArrayInput
 }
 
 func (GitHubReleaseArgs) ElementType() reflect.Type {
@@ -190,58 +237,79 @@ func (o GitHubReleaseOutput) ToGitHubReleaseOutputWithContext(ctx context.Contex
 	return o
 }
 
+// The name of the release asset to install. If this is not provided then
+//
+//	the resource will try and find the correct asset name to install. Supports regex
 func (o GitHubReleaseOutput) AssetName() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *GitHubRelease) pulumi.StringPtrOutput { return v.AssetName }).(pulumi.StringPtrOutput)
 }
 
+// Sometimes release assets contain a folder containing
+//
+//	program binaries which can just be copied. If that is the case, then provide the
+//	location here. This will copy all files in the directory to the bin_location
 func (o GitHubReleaseOutput) BinFolder() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *GitHubRelease) pulumi.StringPtrOutput { return v.BinFolder }).(pulumi.StringPtrOutput)
 }
 
+// The location to put the program. Defaults to $HOME/.local/bin
 func (o GitHubReleaseOutput) BinLocation() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *GitHubRelease) pulumi.StringPtrOutput { return v.BinLocation }).(pulumi.StringPtrOutput)
 }
 
+// The URL of the GitHub release asset
 func (o GitHubReleaseOutput) DownloadURL() pulumi.StringOutput {
 	return o.ApplyT(func(v *GitHubRelease) pulumi.StringOutput { return v.DownloadURL }).(pulumi.StringOutput)
 }
 
+// The environment variables to set when running the commands
 func (o GitHubReleaseOutput) Environment() pulumi.StringMapOutput {
 	return o.ApplyT(func(v *GitHubRelease) pulumi.StringMapOutput { return v.Environment }).(pulumi.StringMapOutput)
 }
 
+// The name of the executable to create a symlink for. If not provided then the executable name will be the same as the repo name
 func (o GitHubReleaseOutput) Executable() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *GitHubRelease) pulumi.StringPtrOutput { return v.Executable }).(pulumi.StringPtrOutput)
 }
 
+// The commands to run to install the program
 func (o GitHubReleaseOutput) InstallCommands() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v *GitHubRelease) pulumi.StringArrayOutput { return v.InstallCommands }).(pulumi.StringArrayOutput)
 }
 
+// The interpreter to use to run the commands. Defaults to ['/bin/sh', '-c']
 func (o GitHubReleaseOutput) Interpreter() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v *GitHubRelease) pulumi.StringArrayOutput { return v.Interpreter }).(pulumi.StringArrayOutput)
 }
 
+// The locations the program was installed to
 func (o GitHubReleaseOutput) Locations() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v *GitHubRelease) pulumi.StringArrayOutput { return v.Locations }).(pulumi.StringArrayOutput)
 }
 
+// The GitHub organization the repo belongs to
 func (o GitHubReleaseOutput) Org() pulumi.StringOutput {
 	return o.ApplyT(func(v *GitHubRelease) pulumi.StringOutput { return v.Org }).(pulumi.StringOutput)
 }
 
+// The release version to install. If this is not provided then
+//
+//	the resource will try and find the latest release version to install.
 func (o GitHubReleaseOutput) ReleaseVersion() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *GitHubRelease) pulumi.StringPtrOutput { return v.ReleaseVersion }).(pulumi.StringPtrOutput)
 }
 
+// The GitHub repository name
 func (o GitHubReleaseOutput) Repo() pulumi.StringOutput {
 	return o.ApplyT(func(v *GitHubRelease) pulumi.StringOutput { return v.Repo }).(pulumi.StringOutput)
 }
 
+// Optional Commands to run to uninstall the program
 func (o GitHubReleaseOutput) UninstallCommands() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v *GitHubRelease) pulumi.StringArrayOutput { return v.UninstallCommands }).(pulumi.StringArrayOutput)
 }
 
+// Optional Commands to run to update the program
 func (o GitHubReleaseOutput) UpdateCommands() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v *GitHubRelease) pulumi.StringArrayOutput { return v.UpdateCommands }).(pulumi.StringArrayOutput)
 }

@@ -12,17 +12,26 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
+// Create a symlink for a file or directory
 type Link struct {
 	pulumi.CustomResourceState
 
-	IsDir     pulumi.BoolOutput        `pulumi:"isDir"`
-	Linked    pulumi.BoolOutput        `pulumi:"linked"`
-	Overwrite pulumi.BoolPtrOutput     `pulumi:"overwrite"`
-	Recursive pulumi.BoolPtrOutput     `pulumi:"recursive"`
-	Retain    pulumi.BoolPtrOutput     `pulumi:"retain"`
-	Source    pulumi.StringOutput      `pulumi:"source"`
-	Target    pulumi.StringOutput      `pulumi:"target"`
-	Targets   pulumi.StringArrayOutput `pulumi:"targets"`
+	// Whether the source is a directory
+	IsDir pulumi.BoolOutput `pulumi:"isDir"`
+	// Whether the symlink has been created
+	Linked pulumi.BoolOutput `pulumi:"linked"`
+	// Whether to overwrite the target if it exists
+	Overwrite pulumi.BoolPtrOutput `pulumi:"overwrite"`
+	// Whether to recursively create links for directories
+	Recursive pulumi.BoolPtrOutput `pulumi:"recursive"`
+	// Whether to retain the link if the resource is deleted
+	Retain pulumi.BoolPtrOutput `pulumi:"retain"`
+	// The source file or directory to create a link to
+	Source pulumi.StringOutput `pulumi:"source"`
+	// The target file or directory to create a link at
+	Target pulumi.StringOutput `pulumi:"target"`
+	// The targets locations of the symlink
+	Targets pulumi.StringArrayOutput `pulumi:"targets"`
 }
 
 // NewLink registers a new resource with the given unique name, arguments, and options.
@@ -71,20 +80,30 @@ func (LinkState) ElementType() reflect.Type {
 }
 
 type linkArgs struct {
-	Overwrite *bool  `pulumi:"overwrite"`
-	Recursive *bool  `pulumi:"recursive"`
-	Retain    *bool  `pulumi:"retain"`
-	Source    string `pulumi:"source"`
-	Target    string `pulumi:"target"`
+	// Whether to overwrite the target if it exists
+	Overwrite *bool `pulumi:"overwrite"`
+	// Whether to recursively create links for directories
+	Recursive *bool `pulumi:"recursive"`
+	// Whether to retain the link if the resource is deleted
+	Retain *bool `pulumi:"retain"`
+	// The source file or directory to create a link to
+	Source string `pulumi:"source"`
+	// The target file or directory to create a link at
+	Target string `pulumi:"target"`
 }
 
 // The set of arguments for constructing a Link resource.
 type LinkArgs struct {
+	// Whether to overwrite the target if it exists
 	Overwrite pulumi.BoolPtrInput
+	// Whether to recursively create links for directories
 	Recursive pulumi.BoolPtrInput
-	Retain    pulumi.BoolPtrInput
-	Source    pulumi.StringInput
-	Target    pulumi.StringInput
+	// Whether to retain the link if the resource is deleted
+	Retain pulumi.BoolPtrInput
+	// The source file or directory to create a link to
+	Source pulumi.StringInput
+	// The target file or directory to create a link at
+	Target pulumi.StringInput
 }
 
 func (LinkArgs) ElementType() reflect.Type {
@@ -174,34 +193,42 @@ func (o LinkOutput) ToLinkOutputWithContext(ctx context.Context) LinkOutput {
 	return o
 }
 
+// Whether the source is a directory
 func (o LinkOutput) IsDir() pulumi.BoolOutput {
 	return o.ApplyT(func(v *Link) pulumi.BoolOutput { return v.IsDir }).(pulumi.BoolOutput)
 }
 
+// Whether the symlink has been created
 func (o LinkOutput) Linked() pulumi.BoolOutput {
 	return o.ApplyT(func(v *Link) pulumi.BoolOutput { return v.Linked }).(pulumi.BoolOutput)
 }
 
+// Whether to overwrite the target if it exists
 func (o LinkOutput) Overwrite() pulumi.BoolPtrOutput {
 	return o.ApplyT(func(v *Link) pulumi.BoolPtrOutput { return v.Overwrite }).(pulumi.BoolPtrOutput)
 }
 
+// Whether to recursively create links for directories
 func (o LinkOutput) Recursive() pulumi.BoolPtrOutput {
 	return o.ApplyT(func(v *Link) pulumi.BoolPtrOutput { return v.Recursive }).(pulumi.BoolPtrOutput)
 }
 
+// Whether to retain the link if the resource is deleted
 func (o LinkOutput) Retain() pulumi.BoolPtrOutput {
 	return o.ApplyT(func(v *Link) pulumi.BoolPtrOutput { return v.Retain }).(pulumi.BoolPtrOutput)
 }
 
+// The source file or directory to create a link to
 func (o LinkOutput) Source() pulumi.StringOutput {
 	return o.ApplyT(func(v *Link) pulumi.StringOutput { return v.Source }).(pulumi.StringOutput)
 }
 
+// The target file or directory to create a link at
 func (o LinkOutput) Target() pulumi.StringOutput {
 	return o.ApplyT(func(v *Link) pulumi.StringOutput { return v.Target }).(pulumi.StringOutput)
 }
 
+// The targets locations of the symlink
 func (o LinkOutput) Targets() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v *Link) pulumi.StringArrayOutput { return v.Targets }).(pulumi.StringArrayOutput)
 }

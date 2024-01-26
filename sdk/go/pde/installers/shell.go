@@ -12,21 +12,34 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
+// Install something from a URL using shell commands
 type Shell struct {
 	pulumi.CustomResourceState
 
-	BinLocation       pulumi.StringPtrOutput   `pulumi:"binLocation"`
-	DownloadURL       pulumi.StringOutput      `pulumi:"downloadURL"`
-	Environment       pulumi.StringMapOutput   `pulumi:"environment"`
-	Executable        pulumi.BoolPtrOutput     `pulumi:"executable"`
-	InstallCommands   pulumi.StringArrayOutput `pulumi:"installCommands"`
-	Interpreter       pulumi.StringArrayOutput `pulumi:"interpreter"`
-	Location          pulumi.StringPtrOutput   `pulumi:"location"`
-	ProgramName       pulumi.StringOutput      `pulumi:"programName"`
+	// The location to put the program. Defaults to $HOME/.local/bin
+	BinLocation pulumi.StringPtrOutput `pulumi:"binLocation"`
+	// The URL to download the program from
+	DownloadURL pulumi.StringOutput `pulumi:"downloadURL"`
+	// The environment variables to set when running the commands
+	Environment pulumi.StringMapOutput `pulumi:"environment"`
+	// Whether the program that is download is an executable
+	Executable pulumi.BoolPtrOutput `pulumi:"executable"`
+	// The commands to run to install the program
+	InstallCommands pulumi.StringArrayOutput `pulumi:"installCommands"`
+	// The interpreter to use to run the commands. Defaults to ['/bin/sh', '-c']
+	Interpreter pulumi.StringArrayOutput `pulumi:"interpreter"`
+	// The location the program was installed to
+	Location pulumi.StringPtrOutput `pulumi:"location"`
+	// The name of the program. This is the name you would use to execute the program
+	ProgramName pulumi.StringOutput `pulumi:"programName"`
+	// Optional Commands to run to uninstall the program
 	UninstallCommands pulumi.StringArrayOutput `pulumi:"uninstallCommands"`
-	UpdateCommands    pulumi.StringArrayOutput `pulumi:"updateCommands"`
-	Version           pulumi.StringOutput      `pulumi:"version"`
-	VersionCommand    pulumi.StringPtrOutput   `pulumi:"versionCommand"`
+	// Optional Commands to run to update the program
+	UpdateCommands pulumi.StringArrayOutput `pulumi:"updateCommands"`
+	// The version of the program
+	Version pulumi.StringOutput `pulumi:"version"`
+	// The command to run to get the version of the program. This is needed if you want to keep track of the version in state
+	VersionCommand pulumi.StringPtrOutput `pulumi:"versionCommand"`
 }
 
 // NewShell registers a new resource with the given unique name, arguments, and options.
@@ -78,30 +91,50 @@ func (ShellState) ElementType() reflect.Type {
 }
 
 type shellArgs struct {
-	BinLocation       *string           `pulumi:"binLocation"`
-	DownloadURL       string            `pulumi:"downloadURL"`
-	Environment       map[string]string `pulumi:"environment"`
-	Executable        *bool             `pulumi:"executable"`
-	InstallCommands   []string          `pulumi:"installCommands"`
-	Interpreter       []string          `pulumi:"interpreter"`
-	ProgramName       string            `pulumi:"programName"`
-	UninstallCommands []string          `pulumi:"uninstallCommands"`
-	UpdateCommands    []string          `pulumi:"updateCommands"`
-	VersionCommand    *string           `pulumi:"versionCommand"`
+	// The location to put the program. Defaults to $HOME/.local/bin
+	BinLocation *string `pulumi:"binLocation"`
+	// The URL to download the program from
+	DownloadURL string `pulumi:"downloadURL"`
+	// The environment variables to set when running the commands
+	Environment map[string]string `pulumi:"environment"`
+	// Whether the program that is download is an executable
+	Executable *bool `pulumi:"executable"`
+	// The commands to run to install the program
+	InstallCommands []string `pulumi:"installCommands"`
+	// The interpreter to use to run the install commands. Defaults to ['/bin/sh', '-c']
+	Interpreter []string `pulumi:"interpreter"`
+	// The name of the program. This is the name you would use to execute the program
+	ProgramName string `pulumi:"programName"`
+	// Optional Commands to run to uninstall the program
+	UninstallCommands []string `pulumi:"uninstallCommands"`
+	// Optional Commands to run to update the program
+	UpdateCommands []string `pulumi:"updateCommands"`
+	// The command to run to get the version of the program. This is needed if you want to keep track of the version in state
+	VersionCommand *string `pulumi:"versionCommand"`
 }
 
 // The set of arguments for constructing a Shell resource.
 type ShellArgs struct {
-	BinLocation       pulumi.StringPtrInput
-	DownloadURL       pulumi.StringInput
-	Environment       pulumi.StringMapInput
-	Executable        pulumi.BoolPtrInput
-	InstallCommands   pulumi.StringArrayInput
-	Interpreter       pulumi.StringArrayInput
-	ProgramName       pulumi.StringInput
+	// The location to put the program. Defaults to $HOME/.local/bin
+	BinLocation pulumi.StringPtrInput
+	// The URL to download the program from
+	DownloadURL pulumi.StringInput
+	// The environment variables to set when running the commands
+	Environment pulumi.StringMapInput
+	// Whether the program that is download is an executable
+	Executable pulumi.BoolPtrInput
+	// The commands to run to install the program
+	InstallCommands pulumi.StringArrayInput
+	// The interpreter to use to run the install commands. Defaults to ['/bin/sh', '-c']
+	Interpreter pulumi.StringArrayInput
+	// The name of the program. This is the name you would use to execute the program
+	ProgramName pulumi.StringInput
+	// Optional Commands to run to uninstall the program
 	UninstallCommands pulumi.StringArrayInput
-	UpdateCommands    pulumi.StringArrayInput
-	VersionCommand    pulumi.StringPtrInput
+	// Optional Commands to run to update the program
+	UpdateCommands pulumi.StringArrayInput
+	// The command to run to get the version of the program. This is needed if you want to keep track of the version in state
+	VersionCommand pulumi.StringPtrInput
 }
 
 func (ShellArgs) ElementType() reflect.Type {
@@ -191,50 +224,62 @@ func (o ShellOutput) ToShellOutputWithContext(ctx context.Context) ShellOutput {
 	return o
 }
 
+// The location to put the program. Defaults to $HOME/.local/bin
 func (o ShellOutput) BinLocation() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Shell) pulumi.StringPtrOutput { return v.BinLocation }).(pulumi.StringPtrOutput)
 }
 
+// The URL to download the program from
 func (o ShellOutput) DownloadURL() pulumi.StringOutput {
 	return o.ApplyT(func(v *Shell) pulumi.StringOutput { return v.DownloadURL }).(pulumi.StringOutput)
 }
 
+// The environment variables to set when running the commands
 func (o ShellOutput) Environment() pulumi.StringMapOutput {
 	return o.ApplyT(func(v *Shell) pulumi.StringMapOutput { return v.Environment }).(pulumi.StringMapOutput)
 }
 
+// Whether the program that is download is an executable
 func (o ShellOutput) Executable() pulumi.BoolPtrOutput {
 	return o.ApplyT(func(v *Shell) pulumi.BoolPtrOutput { return v.Executable }).(pulumi.BoolPtrOutput)
 }
 
+// The commands to run to install the program
 func (o ShellOutput) InstallCommands() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v *Shell) pulumi.StringArrayOutput { return v.InstallCommands }).(pulumi.StringArrayOutput)
 }
 
+// The interpreter to use to run the commands. Defaults to ['/bin/sh', '-c']
 func (o ShellOutput) Interpreter() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v *Shell) pulumi.StringArrayOutput { return v.Interpreter }).(pulumi.StringArrayOutput)
 }
 
+// The location the program was installed to
 func (o ShellOutput) Location() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Shell) pulumi.StringPtrOutput { return v.Location }).(pulumi.StringPtrOutput)
 }
 
+// The name of the program. This is the name you would use to execute the program
 func (o ShellOutput) ProgramName() pulumi.StringOutput {
 	return o.ApplyT(func(v *Shell) pulumi.StringOutput { return v.ProgramName }).(pulumi.StringOutput)
 }
 
+// Optional Commands to run to uninstall the program
 func (o ShellOutput) UninstallCommands() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v *Shell) pulumi.StringArrayOutput { return v.UninstallCommands }).(pulumi.StringArrayOutput)
 }
 
+// Optional Commands to run to update the program
 func (o ShellOutput) UpdateCommands() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v *Shell) pulumi.StringArrayOutput { return v.UpdateCommands }).(pulumi.StringArrayOutput)
 }
 
+// The version of the program
 func (o ShellOutput) Version() pulumi.StringOutput {
 	return o.ApplyT(func(v *Shell) pulumi.StringOutput { return v.Version }).(pulumi.StringOutput)
 }
 
+// The command to run to get the version of the program. This is needed if you want to keep track of the version in state
 func (o ShellOutput) VersionCommand() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Shell) pulumi.StringPtrOutput { return v.VersionCommand }).(pulumi.StringPtrOutput)
 }

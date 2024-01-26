@@ -39,10 +39,6 @@ type LinkArgs struct {
 	Overwrite *bool   `pulumi:"overwrite,optional"`
 	Retain    *bool   `pulumi:"retain,optional"`
 	Recursive *bool   `pulumi:"recursive,optional"`
-	// Fields projected into Pulumi must be public and have a `pulumi:"..."` tag.
-	// The pulumi tag doesn't need to match the field name, but its generally a
-	// good idea.
-	// Length int `pulumi:"length"`
 }
 
 // Each resource has a state, describing the fields that exist on the created resource.
@@ -52,6 +48,24 @@ type LinkState struct {
 	Linked  *bool     `pulumi:"linked"`
 	IsDir   *bool     `pulumi:"isDir"`
 	Targets *[]string `pulumi:"targets"`
+}
+
+func (l *Link) Annotate(a infer.Annotator) {
+	a.Describe(&l, "Create a symlink for a file or directory")
+}
+
+func (l *LinkState) Annotate(a infer.Annotator) {
+	a.Describe(&l.Linked, "Whether the symlink has been created")
+	a.Describe(&l.IsDir, "Whether the source is a directory")
+	a.Describe(&l.Targets, "The targets locations of the symlink")
+}
+
+func (l *LinkArgs) Annotate(a infer.Annotator) {
+	a.Describe(&l.Source, "The source file or directory to create a link to")
+	a.Describe(&l.Target, "The target file or directory to create a link at")
+	a.Describe(&l.Overwrite, "Whether to overwrite the target if it exists")
+	a.Describe(&l.Retain, "Whether to retain the link if the resource is deleted")
+	a.Describe(&l.Recursive, "Whether to recursively create links for directories")
 }
 
 func (l *Link) Diff(ctx p.Context, id string, olds LinkState, news LinkArgs) (p.DiffResponse, error) {

@@ -12,20 +12,32 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
+// Install a program from a GitHub repository
 type GitHubRepo struct {
 	pulumi.CustomResourceState
 
-	AbsFolderName     pulumi.StringOutput      `pulumi:"absFolderName"`
-	Branch            pulumi.StringPtrOutput   `pulumi:"branch"`
-	Environment       pulumi.StringMapOutput   `pulumi:"environment"`
-	FolderName        pulumi.StringPtrOutput   `pulumi:"folderName"`
-	InstallCommands   pulumi.StringArrayOutput `pulumi:"installCommands"`
-	Interpreter       pulumi.StringArrayOutput `pulumi:"interpreter"`
-	Org               pulumi.StringOutput      `pulumi:"org"`
-	Repo              pulumi.StringOutput      `pulumi:"repo"`
+	// The absolute path to the folder the repo was cloned to
+	AbsFolderName pulumi.StringOutput `pulumi:"absFolderName"`
+	// The branch to clone from. Default to main
+	Branch pulumi.StringPtrOutput `pulumi:"branch"`
+	// The environment variables to set when running the commands
+	Environment pulumi.StringMapOutput `pulumi:"environment"`
+	// The folder to clone the repo to. By default this is will be $HOME/$REPO_NAME
+	FolderName pulumi.StringPtrOutput `pulumi:"folderName"`
+	// The commands to run to install the program
+	InstallCommands pulumi.StringArrayOutput `pulumi:"installCommands"`
+	// The interpreter to use to run the commands. Defaults to ['/bin/sh', '-c']
+	Interpreter pulumi.StringArrayOutput `pulumi:"interpreter"`
+	// The GitHub organization the repo belongs to
+	Org pulumi.StringOutput `pulumi:"org"`
+	// The GitHub repository name
+	Repo pulumi.StringOutput `pulumi:"repo"`
+	// Optional Commands to run to uninstall the program
 	UninstallCommands pulumi.StringArrayOutput `pulumi:"uninstallCommands"`
-	UpdateCommands    pulumi.StringArrayOutput `pulumi:"updateCommands"`
-	Version           pulumi.StringOutput      `pulumi:"version"`
+	// Optional Commands to run to update the program
+	UpdateCommands pulumi.StringArrayOutput `pulumi:"updateCommands"`
+	// The version of the program
+	Version pulumi.StringOutput `pulumi:"version"`
 }
 
 // NewGitHubRepo registers a new resource with the given unique name, arguments, and options.
@@ -74,24 +86,38 @@ func (GitHubRepoState) ElementType() reflect.Type {
 }
 
 type gitHubRepoArgs struct {
-	Branch            *string  `pulumi:"branch"`
-	FolderName        *string  `pulumi:"folderName"`
-	InstallCommands   []string `pulumi:"installCommands"`
-	Org               string   `pulumi:"org"`
-	Repo              string   `pulumi:"repo"`
+	// The branch to clone from. Default to main
+	Branch *string `pulumi:"branch"`
+	// The folder to clone the repo to. By default this is will be $HOME/$REPO_NAME
+	FolderName *string `pulumi:"folderName"`
+	// The commands to run to install the program
+	InstallCommands []string `pulumi:"installCommands"`
+	// The GitHub organization the repo belongs to
+	Org string `pulumi:"org"`
+	// The GitHub repository name
+	Repo string `pulumi:"repo"`
+	// Optional Commands to run to uninstall the program
 	UninstallCommands []string `pulumi:"uninstallCommands"`
-	UpdateCommands    []string `pulumi:"updateCommands"`
+	// Optional Commands to run to update the program
+	UpdateCommands []string `pulumi:"updateCommands"`
 }
 
 // The set of arguments for constructing a GitHubRepo resource.
 type GitHubRepoArgs struct {
-	Branch            pulumi.StringPtrInput
-	FolderName        pulumi.StringPtrInput
-	InstallCommands   pulumi.StringArrayInput
-	Org               pulumi.StringInput
-	Repo              pulumi.StringInput
+	// The branch to clone from. Default to main
+	Branch pulumi.StringPtrInput
+	// The folder to clone the repo to. By default this is will be $HOME/$REPO_NAME
+	FolderName pulumi.StringPtrInput
+	// The commands to run to install the program
+	InstallCommands pulumi.StringArrayInput
+	// The GitHub organization the repo belongs to
+	Org pulumi.StringInput
+	// The GitHub repository name
+	Repo pulumi.StringInput
+	// Optional Commands to run to uninstall the program
 	UninstallCommands pulumi.StringArrayInput
-	UpdateCommands    pulumi.StringArrayInput
+	// Optional Commands to run to update the program
+	UpdateCommands pulumi.StringArrayInput
 }
 
 func (GitHubRepoArgs) ElementType() reflect.Type {
@@ -181,46 +207,57 @@ func (o GitHubRepoOutput) ToGitHubRepoOutputWithContext(ctx context.Context) Git
 	return o
 }
 
+// The absolute path to the folder the repo was cloned to
 func (o GitHubRepoOutput) AbsFolderName() pulumi.StringOutput {
 	return o.ApplyT(func(v *GitHubRepo) pulumi.StringOutput { return v.AbsFolderName }).(pulumi.StringOutput)
 }
 
+// The branch to clone from. Default to main
 func (o GitHubRepoOutput) Branch() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *GitHubRepo) pulumi.StringPtrOutput { return v.Branch }).(pulumi.StringPtrOutput)
 }
 
+// The environment variables to set when running the commands
 func (o GitHubRepoOutput) Environment() pulumi.StringMapOutput {
 	return o.ApplyT(func(v *GitHubRepo) pulumi.StringMapOutput { return v.Environment }).(pulumi.StringMapOutput)
 }
 
+// The folder to clone the repo to. By default this is will be $HOME/$REPO_NAME
 func (o GitHubRepoOutput) FolderName() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *GitHubRepo) pulumi.StringPtrOutput { return v.FolderName }).(pulumi.StringPtrOutput)
 }
 
+// The commands to run to install the program
 func (o GitHubRepoOutput) InstallCommands() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v *GitHubRepo) pulumi.StringArrayOutput { return v.InstallCommands }).(pulumi.StringArrayOutput)
 }
 
+// The interpreter to use to run the commands. Defaults to ['/bin/sh', '-c']
 func (o GitHubRepoOutput) Interpreter() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v *GitHubRepo) pulumi.StringArrayOutput { return v.Interpreter }).(pulumi.StringArrayOutput)
 }
 
+// The GitHub organization the repo belongs to
 func (o GitHubRepoOutput) Org() pulumi.StringOutput {
 	return o.ApplyT(func(v *GitHubRepo) pulumi.StringOutput { return v.Org }).(pulumi.StringOutput)
 }
 
+// The GitHub repository name
 func (o GitHubRepoOutput) Repo() pulumi.StringOutput {
 	return o.ApplyT(func(v *GitHubRepo) pulumi.StringOutput { return v.Repo }).(pulumi.StringOutput)
 }
 
+// Optional Commands to run to uninstall the program
 func (o GitHubRepoOutput) UninstallCommands() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v *GitHubRepo) pulumi.StringArrayOutput { return v.UninstallCommands }).(pulumi.StringArrayOutput)
 }
 
+// Optional Commands to run to update the program
 func (o GitHubRepoOutput) UpdateCommands() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v *GitHubRepo) pulumi.StringArrayOutput { return v.UpdateCommands }).(pulumi.StringArrayOutput)
 }
 
+// The version of the program
 func (o GitHubRepoOutput) Version() pulumi.StringOutput {
 	return o.ApplyT(func(v *GitHubRepo) pulumi.StringOutput { return v.Version }).(pulumi.StringOutput)
 }

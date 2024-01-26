@@ -18,7 +18,7 @@ import (
 
 type GitHubRelease struct{}
 
-type GitHubReleaseInputs struct {
+type GitHubReleaseArgs struct {
 	GitHubBaseInputs
 	AssetName      *string `pulumi:"assetName,optional"`
 	Executable     *string `pulumi:"executable,optional"`
@@ -27,20 +27,41 @@ type GitHubReleaseInputs struct {
 	BinFolder      *string `pulumi:"binFolder,optional"`
 }
 
-type GitHubReleaseOutputs struct {
-	GitHubReleaseInputs
+type GitHubReleaseState struct {
+	GitHubReleaseArgs
 	CommandOutputs
 	DownloadURL *string   `pulumi:"downloadURL"`
 	Locations   *[]string `pulumi:"locations,optional"`
 }
 
-var _ = (infer.CustomRead[GitHubReleaseInputs, GitHubReleaseOutputs])((*GitHubRelease)(nil))
-var _ = (infer.CustomUpdate[GitHubReleaseInputs, GitHubReleaseOutputs])((*GitHubRelease)(nil))
-var _ = (infer.CustomDiff[GitHubReleaseInputs, GitHubReleaseOutputs])((*GitHubRelease)(nil))
-var _ = (infer.CustomDelete[GitHubReleaseOutputs])((*GitHubRelease)(nil))
-var _ = (infer.CustomCheck[GitHubReleaseInputs])((*GitHubRelease)(nil))
+func (l *GitHubRelease) Annotate(a infer.Annotator) {
+	a.Describe(&l, "Install a program from a GitHub release")
+}
 
-func (l *GitHubRelease) Diff(ctx p.Context, id string, olds GitHubReleaseOutputs, news GitHubReleaseInputs) (p.DiffResponse, error) {
+func (l *GitHubReleaseArgs) Annotate(a infer.Annotator) {
+	a.Describe(&l.AssetName, `The name of the release asset to install. If this is not provided then
+				the resource will try and find the correct asset name to install. Supports regex`)
+	a.Describe(&l.Executable, "The name of the executable to create a symlink for. If not provided then the executable name will be the same as the repo name")
+	a.Describe(&l.ReleaseVersion, `The release version to install. If this is not provided then
+				the resource will try and find the latest release version to install.`)
+	a.Describe(&l.BinLocation, "The location to put the program. Defaults to $HOME/.local/bin")
+	a.Describe(&l.BinFolder, `Sometimes release assets contain a folder containing
+				program binaries which can just be copied. If that is the case, then provide the
+				location here. This will copy all files in the directory to the bin_location`)
+}
+
+func (l *GitHubReleaseState) Annotate(a infer.Annotator) {
+	a.Describe(&l.DownloadURL, "The URL of the GitHub release asset")
+	a.Describe(&l.Locations, "The locations the program was installed to")
+}
+
+var _ = (infer.CustomRead[GitHubReleaseArgs, GitHubReleaseState])((*GitHubRelease)(nil))
+var _ = (infer.CustomUpdate[GitHubReleaseArgs, GitHubReleaseState])((*GitHubRelease)(nil))
+var _ = (infer.CustomDiff[GitHubReleaseArgs, GitHubReleaseState])((*GitHubRelease)(nil))
+var _ = (infer.CustomDelete[GitHubReleaseState])((*GitHubRelease)(nil))
+var _ = (infer.CustomCheck[GitHubReleaseArgs])((*GitHubRelease)(nil))
+
+func (l *GitHubRelease) Diff(ctx p.Context, id string, olds GitHubReleaseState, news GitHubReleaseArgs) (p.DiffResponse, error) {
 	diff := map[string]p.PropertyDiff{}
 
 	if *news.AssetName != *news.AssetName {
@@ -104,9 +125,9 @@ func (l *GitHubRelease) Diff(ctx p.Context, id string, olds GitHubReleaseOutputs
 }
 
 // All resources must implement Create at a minumum.
-func (l *GitHubRelease) Create(ctx p.Context, name string, input GitHubReleaseInputs, preview bool) (string, GitHubReleaseOutputs, error) {
-	state := &GitHubReleaseOutputs{
-		GitHubReleaseInputs: input,
+func (l *GitHubRelease) Create(ctx p.Context, name string, input GitHubReleaseArgs, preview bool) (string, GitHubReleaseState, error) {
+	state := &GitHubReleaseState{
+		GitHubReleaseArgs: input,
 	}
 
 	if input.AssetName != nil {
@@ -116,11 +137,11 @@ func (l *GitHubRelease) Create(ctx p.Context, name string, input GitHubReleaseIn
 		}
 		downloadUrl, err := getReleaseDownloadURL(ctx, client, *input.Org, *input.Repo, *input.ReleaseVersion, *input.AssetName)
 		if err != nil {
-			return "", GitHubReleaseOutputs{}, err
+			return "", GitHubReleaseState{}, err
 		}
 		state.DownloadURL = &downloadUrl
 	} else {
-		return "", GitHubReleaseOutputs{}, errors.New("assetName not defined, something went wrong!")
+		return "", GitHubReleaseState{}, errors.New("assetName not defined, something went wrong!")
 	}
 
 	if preview {
@@ -132,13 +153,13 @@ func (l *GitHubRelease) Create(ctx p.Context, name string, input GitHubReleaseIn
 		commands = append(commands, *input.InstallCommands...)
 	}
 	if err := state.createOrUpdate(ctx, commands, &input); err != nil {
-		return "", GitHubReleaseOutputs{}, err
+		return "", GitHubReleaseState{}, err
 	}
 
 	return name, *state, nil
 }
 
-func (o *GitHubReleaseOutputs) createOrUpdate(ctx p.Context, commands []string, input *GitHubReleaseInputs) error {
+func (o *GitHubReleaseState) createOrUpdate(ctx p.Context, commands []string, input *GitHubReleaseArgs) error {
 	if o.DownloadURL == nil {
 		return errors.New("Couldn't find a GitHub release to use")
 	}
@@ -160,7 +181,7 @@ func (o *GitHubReleaseOutputs) createOrUpdate(ctx p.Context, commands []string, 
 		exName = &parts[len(parts)-1]
 		ex = true
 	}
-	shellInputs := &ShellInputs{
+	shellInputs := &ShellArgs{
 		BaseInputs:      input.BaseInputs,
 		BinLocation:     input.BinLocation,
 		InstallCommands: input.InstallCommands,
@@ -169,8 +190,8 @@ func (o *GitHubReleaseOutputs) createOrUpdate(ctx p.Context, commands []string, 
 		Executable:      &ex,
 	}
 
-	shellOutputs := &ShellOutputs{
-		ShellInputs: *shellInputs,
+	shellOutputs := &ShellState{
+		ShellArgs: *shellInputs,
 	}
 	locations := []string{}
 	if input.BinFolder != nil {
@@ -251,8 +272,8 @@ func getReleaseAssetName(
 	return "", nil
 }
 
-func (l *GitHubRelease) Read(ctx p.Context, id string, inputs GitHubReleaseInputs, state GitHubReleaseOutputs) (
-	canonicalID string, normalizedInputs GitHubReleaseInputs, normalizedState GitHubReleaseOutputs, err error) {
+func (l *GitHubRelease) Read(ctx p.Context, id string, inputs GitHubReleaseArgs, state GitHubReleaseState) (
+	canonicalID string, normalizedInputs GitHubReleaseArgs, normalizedState GitHubReleaseState, err error) {
 
 	if inputs.ReleaseVersion != nil {
 		return id, inputs, state, nil
@@ -264,14 +285,14 @@ func (l *GitHubRelease) Read(ctx p.Context, id string, inputs GitHubReleaseInput
 
 	release, _, err := client.Repositories.GetLatestRelease(ctx, *inputs.Org, *inputs.Repo)
 	if err != nil {
-		return "", GitHubReleaseInputs{}, GitHubReleaseOutputs{}, err
+		return "", GitHubReleaseArgs{}, GitHubReleaseState{}, err
 	}
 	state.ReleaseVersion = release.TagName
 
 	return id, inputs, state, nil
 }
 
-func (l *GitHubRelease) Check(ctx p.Context, name string, oldInputs, newInputs resource.PropertyMap) (GitHubReleaseInputs, []p.CheckFailure, error) {
+func (l *GitHubRelease) Check(ctx p.Context, name string, oldInputs, newInputs resource.PropertyMap) (GitHubReleaseArgs, []p.CheckFailure, error) {
 	client := github.NewClient(nil)
 	if val, ok := os.LookupEnv("GITHUB_TOKEN"); ok {
 		client.WithAuthToken(val)
@@ -284,7 +305,7 @@ func (l *GitHubRelease) Check(ctx p.Context, name string, oldInputs, newInputs r
 		release, _, err := client.Repositories.GetLatestRelease(ctx, org, repo)
 		if err != nil {
 			failures = append(failures, p.CheckFailure{Property: "releaseVersion", Reason: err.Error()})
-			return GitHubReleaseInputs{}, failures, nil
+			return GitHubReleaseArgs{}, failures, nil
 		}
 		newInputs["releaseVersion"] = resource.NewStringProperty(*release.TagName)
 		version = *release.TagName
@@ -298,7 +319,7 @@ func (l *GitHubRelease) Check(ctx p.Context, name string, oldInputs, newInputs r
 	assetName, err := getReleaseAssetName(ctx, client, org, repo, version, inputAsssetName)
 	if err != nil {
 		failures = append(failures, p.CheckFailure{Property: "releaseVersion", Reason: err.Error()})
-		return GitHubReleaseInputs{}, failures, nil
+		return GitHubReleaseArgs{}, failures, nil
 	}
 	newInputs["assetName"] = resource.NewStringProperty(assetName)
 
@@ -306,21 +327,21 @@ func (l *GitHubRelease) Check(ctx p.Context, name string, oldInputs, newInputs r
 		home, err := os.UserHomeDir()
 		if err != nil {
 			failures = append(failures, p.CheckFailure{Property: "binLocation", Reason: err.Error()})
-			return GitHubReleaseInputs{}, failures, nil
+			return GitHubReleaseArgs{}, failures, nil
 		}
 		binLocation := path.Join(home, ".local", "bin")
 		newInputs["binLocation"] = resource.NewStringProperty(binLocation)
 	}
 
-	inputs, fails, err := infer.DefaultCheck[GitHubReleaseInputs](newInputs)
+	inputs, fails, err := infer.DefaultCheck[GitHubReleaseArgs](newInputs)
 	return inputs, append(failures, fails...), err
 }
 
-func (l *GitHubRelease) Update(ctx p.Context, name string, olds GitHubReleaseOutputs, news GitHubReleaseInputs, preview bool) (GitHubReleaseOutputs, error) {
-	state := &GitHubReleaseOutputs{
-		GitHubReleaseInputs: news,
-		DownloadURL:         olds.DownloadURL,
-		Locations:           olds.Locations,
+func (l *GitHubRelease) Update(ctx p.Context, name string, olds GitHubReleaseState, news GitHubReleaseArgs, preview bool) (GitHubReleaseState, error) {
+	state := &GitHubReleaseState{
+		GitHubReleaseArgs: news,
+		DownloadURL:       olds.DownloadURL,
+		Locations:         olds.Locations,
 	}
 	if news.AssetName != nil {
 		client := github.NewClient(nil)
@@ -329,11 +350,11 @@ func (l *GitHubRelease) Update(ctx p.Context, name string, olds GitHubReleaseOut
 		}
 		downloadUrl, err := getReleaseDownloadURL(ctx, client, *news.Org, *news.Repo, *news.ReleaseVersion, *news.AssetName)
 		if err != nil {
-			return GitHubReleaseOutputs{}, err
+			return GitHubReleaseState{}, err
 		}
 		state.DownloadURL = &downloadUrl
 	} else {
-		return GitHubReleaseOutputs{}, errors.New("assetName not defined, something went wrong!")
+		return GitHubReleaseState{}, errors.New("assetName not defined, something went wrong!")
 	}
 
 	if preview {
@@ -347,13 +368,13 @@ func (l *GitHubRelease) Update(ctx p.Context, name string, olds GitHubReleaseOut
 		commands = *news.InstallCommands
 	}
 	if err := state.createOrUpdate(ctx, commands, &news); err != nil {
-		return GitHubReleaseOutputs{}, err
+		return GitHubReleaseState{}, err
 	}
 
 	return *state, nil
 }
 
-func (l *GitHubRelease) Delete(ctx p.Context, id string, props GitHubReleaseOutputs) error {
+func (l *GitHubRelease) Delete(ctx p.Context, id string, props GitHubReleaseState) error {
 	if props.UninstallCommands != nil {
 		_, err := props.run(ctx, strings.Join(*props.UninstallCommands, " && "), "")
 		if err != nil {

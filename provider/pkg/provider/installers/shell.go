@@ -14,13 +14,13 @@ import (
 
 type Shell struct{}
 
-var _ = (infer.CustomRead[ShellInputs, ShellOutputs])((*Shell)(nil))
-var _ = (infer.CustomUpdate[ShellInputs, ShellOutputs])((*Shell)(nil))
-var _ = (infer.CustomDiff[ShellInputs, ShellOutputs])((*Shell)(nil))
-var _ = (infer.CustomDelete[ShellOutputs])((*Shell)(nil))
-var _ = (infer.CustomCheck[ShellInputs])((*Shell)(nil))
+var _ = (infer.CustomRead[ShellArgs, ShellState])((*Shell)(nil))
+var _ = (infer.CustomUpdate[ShellArgs, ShellState])((*Shell)(nil))
+var _ = (infer.CustomDiff[ShellArgs, ShellState])((*Shell)(nil))
+var _ = (infer.CustomDelete[ShellState])((*Shell)(nil))
+var _ = (infer.CustomCheck[ShellArgs])((*Shell)(nil))
 
-type ShellInputs struct {
+type ShellArgs struct {
 	BaseInputs
 	InstallCommands *[]string          `pulumi:"installCommands"`
 	ProgramName     *string            `pulumi:"programName"`
@@ -32,14 +32,33 @@ type ShellInputs struct {
 	Executable      *bool              `pulumi:"executable,optional"`
 }
 
-type ShellOutputs struct {
-	ShellInputs
+type ShellState struct {
+	ShellArgs
 	CommandOutputs
 	BaseOutputs
 	Location *string `pulumi:"location,optional"`
 }
 
-func (l *Shell) Diff(ctx p.Context, id string, olds ShellOutputs, news ShellInputs) (p.DiffResponse, error) {
+func (s *Shell) Annotate(a infer.Annotator) {
+	a.Describe(&s, "Install something from a URL using shell commands")
+}
+
+func (s *ShellArgs) Annotate(a infer.Annotator) {
+	a.Describe(&s.InstallCommands, "The commands to run to install the program")
+	a.Describe(&s.ProgramName, "The name of the program. This is the name you would use to execute the program")
+	a.Describe(&s.DownloadURL, "The URL to download the program from")
+	a.Describe(&s.Environment, "The environment variables to set when running the commands")
+	a.Describe(&s.Interpreter, "The interpreter to use to run the install commands. Defaults to ['/bin/sh', '-c']")
+	a.Describe(&s.VersionCommand, "The command to run to get the version of the program. This is needed if you want to keep track of the version in state")
+	a.Describe(&s.BinLocation, "The location to put the program. Defaults to $HOME/.local/bin")
+	a.Describe(&s.Executable, "Whether the program that is download is an executable")
+}
+
+func (s *ShellState) Annotate(a infer.Annotator) {
+	a.Describe(&s.Location, "The location the program was installed to")
+}
+
+func (l *Shell) Diff(ctx p.Context, id string, olds ShellState, news ShellArgs) (p.DiffResponse, error) {
 	diff := map[string]p.PropertyDiff{}
 
 	if *news.BinLocation != *olds.BinLocation {
@@ -101,27 +120,27 @@ func (l *Shell) Diff(ctx p.Context, id string, olds ShellOutputs, news ShellInpu
 }
 
 // All resources must implement Create at a minumum.
-func (l *Shell) Create(ctx p.Context, name string, input ShellInputs, preview bool) (string, ShellOutputs, error) {
-	state := &ShellOutputs{
-		ShellInputs: input,
+func (l *Shell) Create(ctx p.Context, name string, input ShellArgs, preview bool) (string, ShellState, error) {
+	state := &ShellState{
+		ShellArgs: input,
 	}
 	if preview {
 		return name, *state, nil
 	}
 
 	if err := state.createOrUpdate(ctx, input, *input.InstallCommands); err != nil {
-		return "", ShellOutputs{}, err
+		return "", ShellState{}, err
 	}
 	return name, *state, nil
 }
 
-func (l *Shell) Read(ctx p.Context, id string, inputs ShellInputs, state ShellOutputs) (
-	canonicalID string, normalizedInputs ShellInputs, normalizedState ShellOutputs, err error) {
+func (l *Shell) Read(ctx p.Context, id string, inputs ShellArgs, state ShellState) (
+	canonicalID string, normalizedInputs ShellArgs, normalizedState ShellState, err error) {
 
 	if inputs.VersionCommand != nil {
 		output, err := state.run(ctx, *inputs.VersionCommand, os.TempDir())
 		if err != nil {
-			return "", ShellInputs{}, ShellOutputs{}, err
+			return "", ShellArgs{}, ShellState{}, err
 		}
 		state.Version = &output
 	}
@@ -129,25 +148,25 @@ func (l *Shell) Read(ctx p.Context, id string, inputs ShellInputs, state ShellOu
 	return id, inputs, state, nil
 }
 
-func (l *Shell) Check(ctx p.Context, name string, oldInputs, newInputs resource.PropertyMap) (ShellInputs, []p.CheckFailure, error) {
+func (l *Shell) Check(ctx p.Context, name string, oldInputs, newInputs resource.PropertyMap) (ShellArgs, []p.CheckFailure, error) {
 	fails := []p.CheckFailure{}
 	if _, ok := newInputs["binLocation"]; !ok {
 		home, err := os.UserHomeDir()
 		if err != nil {
 			fails = append(fails, p.CheckFailure{Property: "binLocation", Reason: err.Error()})
-			return ShellInputs{}, fails, nil
+			return ShellArgs{}, fails, nil
 		}
 		binLocation := path.Join(home, ".local", "bin")
 		newInputs["binLocation"] = resource.NewStringProperty(binLocation)
 	}
 
-	inputs, failures, err := infer.DefaultCheck[ShellInputs](newInputs)
+	inputs, failures, err := infer.DefaultCheck[ShellArgs](newInputs)
 	return inputs, append(failures, fails...), err
 }
 
-func (l *Shell) Update(ctx p.Context, name string, olds ShellOutputs, news ShellInputs, preview bool) (ShellOutputs, error) {
-	state := &ShellOutputs{
-		ShellInputs:    news,
+func (l *Shell) Update(ctx p.Context, name string, olds ShellState, news ShellArgs, preview bool) (ShellState, error) {
+	state := &ShellState{
+		ShellArgs:      news,
 		Location:       olds.Location,
 		CommandOutputs: olds.CommandOutputs,
 		BaseOutputs: BaseOutputs{
@@ -164,12 +183,12 @@ func (l *Shell) Update(ctx p.Context, name string, olds ShellOutputs, news Shell
 		commands = *news.InstallCommands
 	}
 	if err := state.createOrUpdate(ctx, news, commands); err != nil {
-		return ShellOutputs{}, err
+		return ShellState{}, err
 	}
 	return *state, nil
 }
 
-func (l *Shell) Delete(ctx p.Context, id string, props ShellOutputs) error {
+func (l *Shell) Delete(ctx p.Context, id string, props ShellState) error {
 	if props.UninstallCommands != nil {
 		_, err := props.run(ctx, strings.Join(*props.UninstallCommands, " && "), "")
 		if err != nil {
@@ -186,7 +205,7 @@ func (l *Shell) Delete(ctx p.Context, id string, props ShellOutputs) error {
 	return nil
 }
 
-func (s *ShellOutputs) createOrUpdate(ctx p.Context, input ShellInputs, commands []string) error {
+func (s *ShellState) createOrUpdate(ctx p.Context, input ShellArgs, commands []string) error {
 	dir := os.TempDir()
 	_, err := s.run(ctx, fmt.Sprintf("curl -OL %s", *input.DownloadURL), dir)
 	if err != nil {

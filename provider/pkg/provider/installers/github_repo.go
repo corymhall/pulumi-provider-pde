@@ -24,26 +24,39 @@ const (
 
 type GitHubRepo struct{}
 
-var _ = (infer.CustomRead[GitHubRepoInputs, GitHubRepoOutputs])((*GitHubRepo)(nil))
-var _ = (infer.CustomUpdate[GitHubRepoInputs, GitHubRepoOutputs])((*GitHubRepo)(nil))
-var _ = (infer.CustomDelete[GitHubRepoOutputs])((*GitHubRepo)(nil))
-var _ = (infer.CustomDiff[GitHubRepoInputs, GitHubRepoOutputs])((*GitHubRepo)(nil))
-var _ = (infer.CustomCheck[GitHubRepoInputs])((*GitHubRepo)(nil))
+var _ = (infer.CustomRead[GitHubRepoArgs, GitHubRepoState])((*GitHubRepo)(nil))
+var _ = (infer.CustomUpdate[GitHubRepoArgs, GitHubRepoState])((*GitHubRepo)(nil))
+var _ = (infer.CustomDelete[GitHubRepoState])((*GitHubRepo)(nil))
+var _ = (infer.CustomDiff[GitHubRepoArgs, GitHubRepoState])((*GitHubRepo)(nil))
+var _ = (infer.CustomCheck[GitHubRepoArgs])((*GitHubRepo)(nil))
 
-type GitHubRepoInputs struct {
+type GitHubRepoArgs struct {
 	GitHubBaseInputs
 	FolderName *string `pulumi:"folderName,optional"`
 	Branch     *string `pulumi:"branch,optional"`
 }
 
-type GitHubRepoOutputs struct {
+type GitHubRepoState struct {
 	CommandOutputs
-	GitHubRepoInputs
+	GitHubRepoArgs
 	BaseOutputs
 	AbsFolderName *string `pulumi:"absFolderName"`
 }
 
-func (l *GitHubRepo) Diff(ctx p.Context, id string, olds GitHubRepoOutputs, news GitHubRepoInputs) (p.DiffResponse, error) {
+func (l *GitHubRepo) Annotate(a infer.Annotator) {
+	a.Describe(&l, "Install a program from a GitHub repository")
+}
+
+func (l *GitHubRepoArgs) Annotate(a infer.Annotator) {
+	a.Describe(&l.Branch, "The branch to clone from. Default to main")
+	a.Describe(&l.FolderName, "The folder to clone the repo to. By default this is will be $HOME/$REPO_NAME")
+}
+
+func (l *GitHubRepoState) Annotate(a infer.Annotator) {
+	a.Describe(&l.AbsFolderName, "The absolute path to the folder the repo was cloned to")
+}
+
+func (l *GitHubRepo) Diff(ctx p.Context, id string, olds GitHubRepoState, news GitHubRepoArgs) (p.DiffResponse, error) {
 	diff := map[string]p.PropertyDiff{}
 	if news.Branch == nil || *news.Branch != *olds.Branch {
 		diff["branch"] = p.PropertyDiff{Kind: p.Update}
@@ -91,32 +104,32 @@ func (l *GitHubRepo) Diff(ctx p.Context, id string, olds GitHubRepoOutputs, news
 }
 
 // All resources must implement Create at a minumum.
-func (l *GitHubRepo) Create(ctx p.Context, name string, input GitHubRepoInputs, preview bool) (string, GitHubRepoOutputs, error) {
-	state := &GitHubRepoOutputs{
-		GitHubRepoInputs: input,
+func (l *GitHubRepo) Create(ctx p.Context, name string, input GitHubRepoArgs, preview bool) (string, GitHubRepoState, error) {
+	state := &GitHubRepoState{
+		GitHubRepoArgs: input,
 	}
 
 	if err := state.getLocation(ctx, &input); err != nil {
-		return "", GitHubRepoOutputs{}, err
+		return "", GitHubRepoState{}, err
 	}
 	if preview {
-		return name, GitHubRepoOutputs{}, nil
+		return name, GitHubRepoState{}, nil
 	}
 
 	if err := state.clone(ctx, input); err != nil {
-		return "", GitHubRepoOutputs{}, err
+		return "", GitHubRepoState{}, err
 	}
 
 	if input.InstallCommands != nil {
 		_, err := state.run(ctx, strings.Join(*input.InstallCommands, " && "), *state.AbsFolderName)
 		if err != nil {
-			return "", GitHubRepoOutputs{}, err
+			return "", GitHubRepoState{}, err
 		}
 	}
 
 	version, err := state.run(ctx, versionCommand(*input.Branch), *state.AbsFolderName)
 	if err != nil {
-		return "", GitHubRepoOutputs{}, err
+		return "", GitHubRepoState{}, err
 	}
 	state.Version = &version
 
@@ -124,12 +137,12 @@ func (l *GitHubRepo) Create(ctx p.Context, name string, input GitHubRepoInputs, 
 }
 
 // used for import operation
-func (l *GitHubRepo) Read(ctx p.Context, id string, inputs GitHubRepoInputs, state GitHubRepoOutputs) (
-	canonicalID string, normalizedInputs GitHubRepoInputs, normalizedState GitHubRepoOutputs, err error) {
+func (l *GitHubRepo) Read(ctx p.Context, id string, inputs GitHubRepoArgs, state GitHubRepoState) (
+	canonicalID string, normalizedInputs GitHubRepoArgs, normalizedState GitHubRepoState, err error) {
 
 	_, err = state.run(ctx, fetchCmd, *state.AbsFolderName)
 	if err != nil {
-		return "", GitHubRepoInputs{}, GitHubRepoOutputs{}, err
+		return "", GitHubRepoArgs{}, GitHubRepoState{}, err
 	}
 
 	versionCmd := fmt.Sprintf("git rev-parse origin/%s", *state.Branch)
@@ -139,7 +152,7 @@ func (l *GitHubRepo) Read(ctx p.Context, id string, inputs GitHubRepoInputs, sta
 
 }
 
-func (l *GitHubRepo) Check(ctx p.Context, name string, oldInputs, newInputs resource.PropertyMap) (GitHubRepoInputs, []p.CheckFailure, error) {
+func (l *GitHubRepo) Check(ctx p.Context, name string, oldInputs, newInputs resource.PropertyMap) (GitHubRepoArgs, []p.CheckFailure, error) {
 	if _, ok := newInputs["branch"]; !ok {
 		newInputs["branch"] = resource.NewStringProperty("main")
 	}
@@ -147,15 +160,15 @@ func (l *GitHubRepo) Check(ctx p.Context, name string, oldInputs, newInputs reso
 	if _, ok := newInputs["folderName"]; !ok {
 		newInputs["folderName"] = resource.NewStringProperty(repo)
 	}
-	return infer.DefaultCheck[GitHubRepoInputs](newInputs)
+	return infer.DefaultCheck[GitHubRepoArgs](newInputs)
 }
 
-func (l *GitHubRepo) Update(ctx p.Context, name string, olds GitHubRepoOutputs, news GitHubRepoInputs, preview bool) (GitHubRepoOutputs, error) {
-	state := &GitHubRepoOutputs{
-		GitHubRepoInputs: news,
-		AbsFolderName:    olds.AbsFolderName,
-		BaseOutputs:      olds.BaseOutputs,
-		CommandOutputs:   olds.CommandOutputs,
+func (l *GitHubRepo) Update(ctx p.Context, name string, olds GitHubRepoState, news GitHubRepoArgs, preview bool) (GitHubRepoState, error) {
+	state := &GitHubRepoState{
+		GitHubRepoArgs: news,
+		AbsFolderName:  olds.AbsFolderName,
+		BaseOutputs:    olds.BaseOutputs,
+		CommandOutputs: olds.CommandOutputs,
 	}
 
 	if preview {
@@ -163,41 +176,41 @@ func (l *GitHubRepo) Update(ctx p.Context, name string, olds GitHubRepoOutputs, 
 	}
 
 	if err := state.getLocation(ctx, &news); err != nil {
-		return GitHubRepoOutputs{}, err
+		return GitHubRepoState{}, err
 	}
 
 	_, err := state.run(ctx, fetchCmd, *state.AbsFolderName)
 	if err != nil {
-		return GitHubRepoOutputs{}, err
+		return GitHubRepoState{}, err
 	}
 	// switch branch
 	_, err = state.run(ctx, fmt.Sprintf("git checkout %s", *state.Branch), *state.AbsFolderName)
 	if err != nil {
-		return GitHubRepoOutputs{}, err
+		return GitHubRepoState{}, err
 	}
 	// pull
 	_, err = state.run(ctx, "git pull", *state.AbsFolderName)
 	if err != nil {
-		return GitHubRepoOutputs{}, err
+		return GitHubRepoState{}, err
 	}
 
 	version, err := state.run(ctx, versionCommand(*state.Branch), *state.AbsFolderName)
 	if err != nil {
-		return GitHubRepoOutputs{}, err
+		return GitHubRepoState{}, err
 	}
 	state.Version = &version
 
 	if state.UpdateCommands != nil {
 		_, err := state.run(ctx, strings.Join(*state.UpdateCommands, " && "), *state.AbsFolderName)
 		if err != nil {
-			return GitHubRepoOutputs{}, err
+			return GitHubRepoState{}, err
 		}
 	}
 
 	return *state, nil
 }
 
-func (l *GitHubRepo) Delete(ctx p.Context, id string, props GitHubRepoOutputs) error {
+func (l *GitHubRepo) Delete(ctx p.Context, id string, props GitHubRepoState) error {
 	if err := os.RemoveAll(*props.AbsFolderName); err != nil {
 		return err
 	}
@@ -210,7 +223,7 @@ func (l *GitHubRepo) Delete(ctx p.Context, id string, props GitHubRepoOutputs) e
 	return nil
 }
 
-func (o *GitHubRepoOutputs) getLocation(ctx p.Context, inputs *GitHubRepoInputs) error {
+func (o *GitHubRepoState) getLocation(ctx p.Context, inputs *GitHubRepoArgs) error {
 	dir, err := os.UserHomeDir()
 	if err != nil {
 		return err
@@ -228,7 +241,7 @@ func (o *GitHubRepoOutputs) getLocation(ctx p.Context, inputs *GitHubRepoInputs)
 	return nil
 }
 
-func (o *GitHubRepoOutputs) clone(ctx p.Context, inputs GitHubRepoInputs) error {
+func (o *GitHubRepoState) clone(ctx p.Context, inputs GitHubRepoArgs) error {
 
 	command := fmt.Sprintf(
 		"git clone -b %s https://github.com/%s/%s %s",
