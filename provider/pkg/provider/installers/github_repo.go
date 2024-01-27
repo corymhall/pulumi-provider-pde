@@ -113,7 +113,7 @@ func (l *GitHubRepo) Create(ctx p.Context, name string, input GitHubRepoArgs, pr
 		return "", GitHubRepoState{}, err
 	}
 	if preview {
-		return name, GitHubRepoState{}, nil
+		return name, *state, nil
 	}
 
 	if err := state.clone(ctx, input); err != nil {

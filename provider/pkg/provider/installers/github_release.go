@@ -256,8 +256,10 @@ func getReleaseAssetName(
 	for _, ra := range release.Assets {
 		name := strings.ToLower(*ra.Name)
 		// if the user has provided their own regex
-		if ok, err := regexp.MatchString(assetName, name); ok && err == nil {
-			return *ra.Name, nil
+		if assetName != "" {
+			if ok, err := regexp.MatchString(assetName, name); ok && err == nil {
+				return *ra.Name, nil
+			}
 		}
 
 		// TODO: make a better regex

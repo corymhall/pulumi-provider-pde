@@ -39,13 +39,14 @@ func linkDefaultState(fromFile, toFile string, makeComputed bool, overwrites res
 func TestLinkCommand(t *testing.T) {
 	t.Parallel()
 	cmd := provider()
-	urn := urn("local", "Link", "file")
+	urn := urn("local", "Link")
 
 	// The state that we expect a non-preview create to return
 	//
 	// We use this as the final expect for create and the old state during update
 	file, _ := os.CreateTemp(os.TempDir(), "abc")
 	toFile := path.Join(os.TempDir(), "xyz")
+	os.Remove(toFile)
 	t.Cleanup(func() {
 		os.Remove(file.Name())
 		os.Remove(toFile)
@@ -93,6 +94,8 @@ func TestLinkCommand(t *testing.T) {
 		assert.Equal(t, resource.PropertyMap{
 			"source":    resource.PropertyValue{V: file.Name()},
 			"target":    resource.PropertyValue{V: toFile},
+			"isDir":     resource.MakeComputed(resource.PropertyValue{V: false}),
+			"linked":    resource.MakeComputed(resource.PropertyValue{V: false}),
 			"overwrite": resource.MakeComputed(resource.PropertyValue{V: false}),
 			"targets": resource.MakeComputed(resource.PropertyValue{
 				V: []resource.PropertyValue{},
@@ -104,6 +107,8 @@ func TestLinkCommand(t *testing.T) {
 		assert.Equal(t, linkDefaultState(file.Name(), toFile, false, resource.PropertyMap{
 			"source":    resource.PropertyValue{V: file.Name()},
 			"target":    resource.PropertyValue{V: toFile},
+			"isDir":     resource.PropertyValue{V: false},
+			"linked":    resource.PropertyValue{V: true},
 			"overwrite": resource.PropertyValue{V: false},
 		}),
 			create(false /*preview*/, resource.PropertyValue{V: false}),
@@ -115,6 +120,8 @@ func TestLinkCommand(t *testing.T) {
 			"source":    resource.PropertyValue{V: file.Name()},
 			"target":    resource.PropertyValue{V: toFile},
 			"overwrite": resource.PropertyValue{V: true},
+			"isDir":     resource.PropertyValue{V: false},
+			"linked":    resource.PropertyValue{V: true},
 			"targets": resource.PropertyValue{
 				V: []resource.PropertyValue{{V: toFile}},
 			},
@@ -125,6 +132,8 @@ func TestLinkCommand(t *testing.T) {
 		assert.Equal(t, linkDefaultState(file.Name(), toFile, false, resource.PropertyMap{
 			"source":    resource.PropertyValue{V: file.Name()},
 			"target":    resource.PropertyValue{V: toFile},
+			"isDir":     resource.PropertyValue{V: false},
+			"linked":    resource.PropertyValue{V: true},
 			"overwrite": resource.PropertyValue{V: true},
 		}), update(false /*preview*/, resource.PropertyValue{V: true}))
 	})

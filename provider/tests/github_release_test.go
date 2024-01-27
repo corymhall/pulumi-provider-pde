@@ -16,16 +16,15 @@ import (
 func TestGitHubReleaseCommand(t *testing.T) {
 	t.Parallel()
 	cmd := provider()
-	urn := urn("installers", "GitHubRelease", "repo")
+	urn := urn("installers", "GitHubRelease")
 
 	// The state that we expect a non-preview create to return
 	//
 	// We use this as the final expect for create and the old state during update
 	bin := path.Join(os.TempDir(), ".bin")
 	os.MkdirAll(bin, 0777)
-	defer os.Remove(bin)
 	t.Cleanup(func() {
-		os.Remove(bin)
+		os.RemoveAll(bin)
 	})
 
 	locations := resource.PropertyValue{
@@ -46,12 +45,12 @@ func TestGitHubReleaseCommand(t *testing.T) {
 		},
 	}
 	base := resource.PropertyMap{
-		"org":         resource.PropertyValue{V: "pulumi"},
-		"repo":        resource.PropertyValue{V: "pulumi"},
-		"binLocation": resource.PropertyValue{V: bin},
-		"binFolder":   resource.PropertyValue{V: "pulumi"},
-		"version":     resource.PropertyValue{V: "v3.81.0"},
-		"downloadURL": resource.PropertyValue{V: "https://github.com/pulumi/pulumi/releases/download/v3.81.0/pulumi-v3.81.0-darwin-arm64.tar.gz"},
+		"org":            resource.PropertyValue{V: "pulumi"},
+		"repo":           resource.PropertyValue{V: "pulumi"},
+		"binLocation":    resource.PropertyValue{V: bin},
+		"binFolder":      resource.PropertyValue{V: "pulumi"},
+		"releaseVersion": resource.PropertyValue{V: "v3.81.0"},
+		"downloadURL":    resource.PropertyValue{V: "https://github.com/pulumi/pulumi/releases/download/v3.81.0/pulumi-v3.81.0-darwin-arm64.tar.gz"},
 	}
 	// Run a create against an in-memory provider, assert it succeeded, and return the
 	// created property map
@@ -59,11 +58,11 @@ func TestGitHubReleaseCommand(t *testing.T) {
 		cResp, err := cmd.Check(p.CheckRequest{
 			Urn: urn,
 			News: resource.PropertyMap{
-				"org":         resource.PropertyValue{V: "pulumi"},
-				"repo":        resource.PropertyValue{V: "pulumi"},
-				"binLocation": resource.PropertyValue{V: bin},
-				"binFolder":   resource.PropertyValue{V: "pulumi"},
-				"version":     props,
+				"org":            resource.PropertyValue{V: "pulumi"},
+				"repo":           resource.PropertyValue{V: "pulumi"},
+				"binLocation":    resource.PropertyValue{V: bin},
+				"binFolder":      resource.PropertyValue{V: "pulumi"},
+				"releaseVersion": props,
 			},
 		})
 		require.NoError(t, err)
@@ -80,12 +79,12 @@ func TestGitHubReleaseCommand(t *testing.T) {
 		err := cmd.Delete(p.DeleteRequest{
 			Urn: urn,
 			Properties: resource.PropertyMap{
-				"downloadURL": resource.PropertyValue{V: "https://github.com/pulumi/pulumi/releases/download/v3.81.0/pulumi-v3.81.0-darwin-arm64.tar.gz"},
-				"org":         resource.PropertyValue{V: "pulumi"},
-				"repo":        resource.PropertyValue{V: "pulumi"},
-				"binLocation": resource.PropertyValue{V: bin},
-				"version":     resource.PropertyValue{V: "abc"},
-				"locations":   location,
+				"downloadURL":    resource.PropertyValue{V: "https://github.com/pulumi/pulumi/releases/download/v3.81.0/pulumi-v3.81.0-darwin-arm64.tar.gz"},
+				"org":            resource.PropertyValue{V: "pulumi"},
+				"repo":           resource.PropertyValue{V: "pulumi"},
+				"binLocation":    resource.PropertyValue{V: bin},
+				"releaseVersion": resource.PropertyValue{V: "abc"},
+				"locations":      location,
 			},
 		})
 		require.NoError(t, err)
@@ -95,11 +94,11 @@ func TestGitHubReleaseCommand(t *testing.T) {
 		cResp, err := cmd.Check(p.CheckRequest{
 			Urn: urn,
 			News: resource.PropertyMap{
-				"org":         resource.PropertyValue{V: "pulumi"},
-				"repo":        resource.PropertyValue{V: "pulumi"},
-				"binLocation": resource.PropertyValue{V: bin},
-				"binFolder":   resource.PropertyValue{V: "pulumi"},
-				"version":     version,
+				"org":            resource.PropertyValue{V: "pulumi"},
+				"repo":           resource.PropertyValue{V: "pulumi"},
+				"binLocation":    resource.PropertyValue{V: bin},
+				"binFolder":      resource.PropertyValue{V: "pulumi"},
+				"releaseVersion": version,
 			},
 			Olds: base,
 		})
@@ -117,13 +116,13 @@ func TestGitHubReleaseCommand(t *testing.T) {
 
 	t.Run("create-preview", func(t *testing.T) {
 		assert.Equal(t, resource.PropertyMap{
-			"org":         resource.PropertyValue{V: "pulumi"},
-			"repo":        resource.PropertyValue{V: "pulumi"},
-			"version":     resource.PropertyValue{V: "v3.81.0"},
-			"assetName":   resource.PropertyValue{V: "pulumi-v3.81.0-darwin-arm64.tar.gz"},
-			"binLocation": resource.PropertyValue{V: bin},
-			"binFolder":   resource.PropertyValue{V: "pulumi"},
-			"downloadURL": resource.MakeComputed(resource.PropertyValue{V: "https://github.com/pulumi/pulumi/releases/download/v3.81.0/pulumi-v3.81.0-darwin-arm64.tar.gz"}),
+			"org":            resource.PropertyValue{V: "pulumi"},
+			"repo":           resource.PropertyValue{V: "pulumi"},
+			"releaseVersion": resource.PropertyValue{V: "v3.81.0"},
+			"assetName":      resource.PropertyValue{V: "pulumi-v3.81.0-darwin-arm64.tar.gz"},
+			"binLocation":    resource.PropertyValue{V: bin},
+			"binFolder":      resource.PropertyValue{V: "pulumi"},
+			"downloadURL":    resource.MakeComputed(resource.PropertyValue{V: "https://github.com/pulumi/pulumi/releases/download/v3.81.0/pulumi-v3.81.0-darwin-arm64.tar.gz"}),
 		}, create(true /* preview */, resource.PropertyValue{V: "v3.81.0"}))
 	})
 
@@ -138,16 +137,16 @@ func TestGitHubReleaseCommand(t *testing.T) {
 	//
 	t.Run("update-preview", func(t *testing.T) {
 		assert.Equal(t, expectedProps(bin, "v3.80.0", resource.PropertyMap{
-			"version":     resource.PropertyValue{V: "v3.80.0"},
-			"downloadURL": resource.MakeComputed(resource.PropertyValue{V: "https://github.com/pulumi/pulumi/releases/download/v3.80.0/pulumi-v3.80.0-darwin-arm64.tar.gz"}),
+			"releaseVersion": resource.PropertyValue{V: "v3.80.0"},
+			"downloadURL":    resource.MakeComputed(resource.PropertyValue{V: "https://github.com/pulumi/pulumi/releases/download/v3.80.0/pulumi-v3.80.0-darwin-arm64.tar.gz"}),
 		}), update(true /*preview*/, resource.PropertyValue{V: "v3.80.0"}))
 	})
 
 	t.Run("update-replace-actual", func(t *testing.T) {
 		assert.Equal(t, expectedProps(bin, "v3.80.0", resource.PropertyMap{
-			"version":     resource.PropertyValue{V: "v3.80.0"},
-			"downloadURL": resource.PropertyValue{V: "https://github.com/pulumi/pulumi/releases/download/v3.80.0/pulumi-v3.80.0-darwin-arm64.tar.gz"},
-			"locations":   locations,
+			"releaseVersion": resource.PropertyValue{V: "v3.80.0"},
+			"downloadURL":    resource.PropertyValue{V: "https://github.com/pulumi/pulumi/releases/download/v3.80.0/pulumi-v3.80.0-darwin-arm64.tar.gz"},
+			"locations":      locations,
 		}), update(false /*preview*/, resource.PropertyValue{V: "v3.80.0"}))
 	})
 
@@ -178,12 +177,12 @@ func expectedProps(
 	overrides resource.PropertyMap,
 ) resource.PropertyMap {
 	base := resource.PropertyMap{
-		"org":         resource.PropertyValue{V: "pulumi"},
-		"repo":        resource.PropertyValue{V: "pulumi"},
-		"version":     resource.PropertyValue{V: version},
-		"assetName":   resource.PropertyValue{V: fmt.Sprintf("pulumi-%s-darwin-arm64.tar.gz", version)},
-		"binLocation": resource.PropertyValue{V: bin},
-		"binFolder":   resource.PropertyValue{V: "pulumi"},
+		"org":            resource.PropertyValue{V: "pulumi"},
+		"repo":           resource.PropertyValue{V: "pulumi"},
+		"releaseVersion": resource.PropertyValue{V: version},
+		"assetName":      resource.PropertyValue{V: fmt.Sprintf("pulumi-%s-darwin-arm64.tar.gz", version)},
+		"binLocation":    resource.PropertyValue{V: bin},
+		"binFolder":      resource.PropertyValue{V: "pulumi"},
 	}
 	for pk, v := range overrides {
 		base[pk] = v

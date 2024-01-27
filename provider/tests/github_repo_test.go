@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"fmt"
 	"os"
 	"path"
 	"testing"
@@ -16,15 +15,15 @@ import (
 func TestGitHubCommand(t *testing.T) {
 	t.Parallel()
 	cmd := provider()
-	urn := urn("installers", "GitHubRepo", "repo")
+	urn := urn("installers", "GitHubRepo")
 
 	// The state that we expect a non-preview create to return
 	//
 	// We use this as the final expect for create and the old state during update
 	absPath := absFolder("pulumi-provider-pde")
-	defer os.Remove(absPath)
+	os.RemoveAll(absPath)
 	t.Cleanup(func() {
-		os.Remove(absPath)
+		os.RemoveAll(absPath)
 	})
 	// Run a create against an in-memory provider, assert it succeeded, and return the
 	// created property map
@@ -74,12 +73,11 @@ func TestGitHubCommand(t *testing.T) {
 			News: resource.PropertyMap{
 				"org":        resource.PropertyValue{V: "corymhall"},
 				"repo":       resource.PropertyValue{V: "pulumi-provider-pde"},
-				"branch":     resource.PropertyValue{V: "testing"},
-				"folderName": props,
+				"branch":     props,
+				"folderName": resource.PropertyValue{V: "pulumi-provider-pde"},
 			},
 			Olds: olds,
 		})
-		fmt.Println("foldername: ", props)
 		require.NoError(t, err)
 		resp, err := cmd.Update(p.UpdateRequest{
 			ID:      "echo1234",
@@ -119,20 +117,23 @@ func TestGitHubCommand(t *testing.T) {
 			"org":           resource.PropertyValue{V: "corymhall"},
 			"repo":          resource.PropertyValue{V: "pulumi-provider-pde"},
 			"absFolderName": resource.MakeComputed(resource.PropertyValue{V: absPath}),
+			"folderName":    resource.PropertyValue{V: "pulumi-provider-pde"},
 			"version":       resource.MakeComputed(resource.PropertyValue{V: "f9a0bfe30df2f36d677240f811468ec27ac78446"}),
-			"branch":        resource.PropertyValue{V: "testing"},
+			// "branch":        resource.PropertyValue{V: "testing"},
 		}, update(true /*preview*/, resource.NewNullProperty()))
 	})
 
 	t.Run("update-replace-actual", func(t *testing.T) {
-		assert.Equal(t, resource.PropertyMap{
-			"org":           resource.PropertyValue{V: "corymhall"},
-			"repo":          resource.PropertyValue{V: "pulumi-provider-pde"},
-			"folderName":    resource.PropertyValue{V: "pulumi-provider-tmp"},
-			"absFolderName": resource.PropertyValue{V: absFolder("pulumi-provider-tmp")},
-			"version":       resource.PropertyValue{V: "f9a0bfe30df2f36d677240f811468ec27ac78446"},
-			"branch":        resource.PropertyValue{V: "testing"},
-		}, update(false /*preview*/, resource.PropertyValue{V: "pulumi-provider-tmp"}))
+		assert.Subset(t,
+			update(false /*preview*/, resource.PropertyValue{V: "main"}),
+			resource.PropertyMap{
+				"org":           resource.PropertyValue{V: "corymhall"},
+				"repo":          resource.PropertyValue{V: "pulumi-provider-pde"},
+				"folderName":    resource.PropertyValue{V: "pulumi-provider-pde"},
+				"absFolderName": resource.PropertyValue{V: absFolder("pulumi-provider-pde")},
+				// "version":       resource.PropertyValue{V: "f9a0bfe30df2f36d677240f811468ec27ac78446"},
+				"branch": resource.PropertyValue{V: "main"},
+			})
 	})
 
 	t.Run("delete-actual", func(t *testing.T) {

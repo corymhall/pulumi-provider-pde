@@ -158,6 +158,8 @@ func (l *Link) Update(ctx p.Context, name string, olds LinkState, news LinkArgs,
 		return *state, nil
 	}
 
+	state.Targets = &[]string{}
+
 	if err := state.link(ctx); err != nil {
 		return LinkState{}, err
 	}
@@ -191,6 +193,9 @@ func (l *LinkState) link(ctx p.Context) error {
 			return err
 		}
 	} else {
+		if l.Overwrite != nil && *l.Overwrite {
+			os.Remove(*l.Target)
+		}
 		if err := os.Symlink(*l.Source, *l.Target); err != nil {
 			return err
 		}

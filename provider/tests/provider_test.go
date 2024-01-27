@@ -2,7 +2,6 @@ package tests
 
 import (
 	"fmt"
-
 	"github.com/blang/semver"
 	pde "github.com/corymhall/pulumi-provider-pde/provider/pkg/provider"
 	"github.com/pulumi/pulumi-go-provider/integration"
@@ -15,16 +14,7 @@ func provider() integration.Server {
 	return integration.NewServer(pde.Name, v, pde.NewProvider())
 
 }
-func urn(mod, res, name string) resource.URN {
-	m := tokens.ModuleName(mod)
-	r := tokens.TypeName(res)
-	if !tokens.IsQName(name) {
-		panic(fmt.Sprintf("invalid resource name: %q", name))
-	}
-	n := tokens.QName(name)
-	return resource.NewURN("test", "command", "",
-		tokens.NewTypeToken(
-			tokens.NewModuleToken(pde.Name, m),
-			r),
-		n)
+func urn(typ, res string) resource.URN {
+	return resource.NewURN("stack", "proj", "",
+		tokens.Type(fmt.Sprintf("test:%s:%s", typ, res)), "name")
 }
