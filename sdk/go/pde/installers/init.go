@@ -25,6 +25,8 @@ func (m *module) Construct(ctx *pulumi.Context, name, typ, urn string) (r pulumi
 		r = &GitHubRelease{}
 	case "pde:installers:GitHubRepo":
 		r = &GitHubRepo{}
+	case "pde:installers:Npm":
+		r = &Npm{}
 	case "pde:installers:Shell":
 		r = &Shell{}
 	default:

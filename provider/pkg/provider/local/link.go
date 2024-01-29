@@ -138,7 +138,7 @@ func (l *Link) Read(ctx p.Context, id string, inputs LinkArgs, state LinkState) 
 			state.Linked = &b
 		}
 	}
-	return *inputs.Source, inputs, state, nil
+	return id, inputs, state, nil
 
 }
 

@@ -64,10 +64,6 @@ var _ = (infer.CustomCheck[GitHubReleaseArgs])((*GitHubRelease)(nil))
 func (l *GitHubRelease) Diff(ctx p.Context, id string, olds GitHubReleaseState, news GitHubReleaseArgs) (p.DiffResponse, error) {
 	diff := map[string]p.PropertyDiff{}
 
-	if *news.AssetName != *news.AssetName {
-		diff["assetName"] = p.PropertyDiff{Kind: p.UpdateReplace}
-	}
-
 	var newInstall string
 	var oldInstall string
 	if news.InstallCommands != nil {
@@ -78,7 +74,7 @@ func (l *GitHubRelease) Diff(ctx p.Context, id string, olds GitHubReleaseState, 
 	}
 
 	if newInstall != oldInstall {
-		diff["installCommands"] = p.PropertyDiff{Kind: p.UpdateReplace}
+		diff["installCommands"] = p.PropertyDiff{Kind: p.Update}
 	}
 	var newUninstall string
 	var oldUninstall string
@@ -89,7 +85,7 @@ func (l *GitHubRelease) Diff(ctx p.Context, id string, olds GitHubReleaseState, 
 		oldUninstall = strings.Join(*olds.UninstallCommands, " && ")
 	}
 	if newUninstall != oldUninstall {
-		diff["uninstallCommands"] = p.PropertyDiff{Kind: p.UpdateReplace}
+		diff["uninstallCommands"] = p.PropertyDiff{Kind: p.Update}
 	}
 
 	var newUpdate string
@@ -101,7 +97,16 @@ func (l *GitHubRelease) Diff(ctx p.Context, id string, olds GitHubReleaseState, 
 		oldUpdate = strings.Join(*olds.UpdateCommands, " && ")
 	}
 	if newUpdate != oldUpdate {
-		diff["updateCommands"] = p.PropertyDiff{Kind: p.UpdateReplace}
+		diff["updateCommands"] = p.PropertyDiff{Kind: p.Update}
+	}
+
+	pdiff := p.PropertyDiff{Kind: p.UpdateReplace}
+	if newUpdate != "" {
+		pdiff = p.PropertyDiff{Kind: p.Update}
+
+	}
+	if *news.AssetName != *news.AssetName {
+		diff["assetName"] = pdiff
 	}
 
 	if *news.Org != *olds.Org {
@@ -114,7 +119,7 @@ func (l *GitHubRelease) Diff(ctx p.Context, id string, olds GitHubReleaseState, 
 
 	if (news.ReleaseVersion == nil && news.ReleaseVersion != olds.ReleaseVersion) ||
 		(news.ReleaseVersion != nil && *news.ReleaseVersion != *olds.ReleaseVersion) {
-		diff["releaseVersion"] = p.PropertyDiff{Kind: p.UpdateReplace}
+		diff["releaseVersion"] = pdiff
 	}
 
 	return p.DiffResponse{

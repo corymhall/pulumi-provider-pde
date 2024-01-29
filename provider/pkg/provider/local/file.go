@@ -67,7 +67,7 @@ func (*File) Create(ctx p.Context, name string, input FileArgs, preview bool) (i
 	}
 
 	if preview { // Don't do the actual creating if in preview
-		return input.Path, *state, nil
+		return name, *state, nil
 	}
 
 	_, err = os.Stat(path.Dir(input.Path))
@@ -89,7 +89,7 @@ func (*File) Create(ctx p.Context, name string, input FileArgs, preview bool) (i
 	if n != len([]byte(contentString)) {
 		return "", FileState{}, fmt.Errorf("only wrote %d/%d bytes", n, len(contentString))
 	}
-	return input.Path, *state, nil
+	return name, *state, nil
 }
 
 func (*File) Delete(ctx p.Context, id string, props FileState) error {
@@ -109,29 +109,29 @@ func (*File) Check(ctx p.Context, name string, oldInputs, newInputs resource.Pro
 }
 
 func (*File) Update(ctx p.Context, id string, olds FileState, news FileArgs, preview bool) (FileState, error) {
-	newContentString := strings.Join(news.Content, "\n")
-	oldContentString := strings.Join(olds.Content, "\n")
-	if !preview && oldContentString != newContentString {
-		f, err := os.Create(olds.Path)
-		if err != nil {
-			return FileState{}, err
-		}
-		defer f.Close()
-		n, err := f.WriteString(newContentString)
-		if err != nil {
-			return FileState{}, err
-		}
-		if n != len([]byte(newContentString)) {
-			return FileState{}, fmt.Errorf("only wrote %d/%d bytes", n, len(news.Content))
-		}
-	}
-
-	return FileState{
+	state := &FileState{
 		Path:    news.Path,
 		Force:   news.Force,
 		Content: news.Content,
-	}, nil
+	}
+	if preview {
+		return *state, nil
+	}
+	newContentString := strings.Join(news.Content, "\n")
+	f, err := os.Create(olds.Path)
+	if err != nil {
+		return FileState{}, err
+	}
+	defer f.Close()
+	n, err := f.WriteString(newContentString)
+	if err != nil {
+		return FileState{}, err
+	}
+	if n != len([]byte(newContentString)) {
+		return FileState{}, fmt.Errorf("only wrote %d/%d bytes", n, len(news.Content))
+	}
 
+	return *state, nil
 }
 
 func (*File) Diff(ctx p.Context, id string, olds FileState, news FileArgs) (p.DiffResponse, error) {
@@ -163,11 +163,11 @@ func (*File) Read(ctx p.Context, id string, inputs FileArgs, state FileState) (c
 	content := string(byteContent)
 	return path, FileArgs{
 			Path:    path,
-			Force:   inputs.Force && state.Force,
+			Force:   inputs.Force,
 			Content: inputs.Content,
 		}, FileState{
 			Path:    path,
-			Force:   inputs.Force && state.Force,
+			Force:   state.Force,
 			Content: strings.Split(content, "\n"),
 		}, nil
 }

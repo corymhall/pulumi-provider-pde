@@ -83,7 +83,7 @@ func (l *Shell) Diff(ctx p.Context, id string, olds ShellState, news ShellArgs) 
 	}
 
 	if newInstall != oldInstall {
-		diff["installCommands"] = p.PropertyDiff{Kind: p.UpdateReplace}
+		diff["installCommands"] = p.PropertyDiff{Kind: p.Update}
 	}
 	var newUninstall string
 	var oldUninstall string
@@ -94,7 +94,7 @@ func (l *Shell) Diff(ctx p.Context, id string, olds ShellState, news ShellArgs) 
 		oldUninstall = strings.Join(*olds.UninstallCommands, " && ")
 	}
 	if newUninstall != oldUninstall {
-		diff["uninstallCommands"] = p.PropertyDiff{Kind: p.UpdateReplace}
+		diff["uninstallCommands"] = p.PropertyDiff{Kind: p.Update}
 	}
 
 	var newUpdate string
@@ -106,7 +106,7 @@ func (l *Shell) Diff(ctx p.Context, id string, olds ShellState, news ShellArgs) 
 		oldUpdate = strings.Join(*olds.UpdateCommands, " && ")
 	}
 	if newUpdate != oldUpdate {
-		diff["updateCommands"] = p.PropertyDiff{Kind: p.UpdateReplace}
+		diff["updateCommands"] = p.PropertyDiff{Kind: p.Update}
 	}
 	if *news.ProgramName != *olds.ProgramName {
 		diff["programName"] = p.PropertyDiff{Kind: p.UpdateReplace}

@@ -74,7 +74,7 @@ func (l *GitHubRepo) Diff(ctx p.Context, id string, olds GitHubRepoState, news G
 	}
 
 	if newInstall != oldInstall {
-		diff["installCommands"] = p.PropertyDiff{Kind: p.UpdateReplace}
+		diff["installCommands"] = p.PropertyDiff{Kind: p.Update}
 	}
 	if *news.Org != *olds.Org {
 		diff["org"] = p.PropertyDiff{Kind: p.UpdateReplace}
@@ -93,7 +93,7 @@ func (l *GitHubRepo) Diff(ctx p.Context, id string, olds GitHubRepoState, news G
 		oldUpdate = strings.Join(*olds.UpdateCommands, " && ")
 	}
 	if newUpdate != oldUpdate {
-		diff["updateCommands"] = p.PropertyDiff{Kind: p.UpdateReplace}
+		diff["updateCommands"] = p.PropertyDiff{Kind: p.Update}
 	}
 
 	return p.DiffResponse{

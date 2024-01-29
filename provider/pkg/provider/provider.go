@@ -36,6 +36,7 @@ func NewProvider() p.Provider {
 			infer.Resource[*installers.GitHubRelease, installers.GitHubReleaseArgs, installers.GitHubReleaseState](),
 			infer.Resource[*installers.GitHubRepo, installers.GitHubRepoArgs, installers.GitHubRepoState](),
 			infer.Resource[*installers.Shell, installers.ShellArgs, installers.ShellState](),
+			infer.Resource[*installers.Npm, installers.NpmArgs, installers.NpmState](),
 		},
 	})
 
