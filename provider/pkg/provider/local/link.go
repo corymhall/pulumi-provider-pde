@@ -217,7 +217,6 @@ func (l *LinkState) linkFile(ctx p.Context, source string, target string) error 
 	if err != nil {
 		return err
 	}
-	var tfTargets []string
 	if s.IsDir() {
 		entries, err := os.ReadDir(source)
 		if err != nil {
@@ -226,19 +225,24 @@ func (l *LinkState) linkFile(ctx p.Context, source string, target string) error 
 		for _, de := range entries {
 			p := filepath.Join(source, de.Name())
 			t := filepath.Join(target, de.Name())
+			if l.Overwrite != nil && *l.Overwrite {
+				os.RemoveAll(t)
+			}
 			if err := os.Symlink(p, t); err != nil {
 				return err
 			}
-			tfTargets = append(tfTargets, *l.Targets...)
+			*l.Targets = append(*l.Targets, t)
 		}
 	} else {
+		if l.Overwrite != nil && *l.Overwrite {
+			os.RemoveAll(target)
+		}
 		if err := os.Symlink(source, target); err != nil {
 			return err
 		}
 
-		tfTargets = append(tfTargets, *l.Targets...)
+		*l.Targets = append(*l.Targets, target)
 	}
-	l.Targets = &tfTargets
 	return nil
 }
 

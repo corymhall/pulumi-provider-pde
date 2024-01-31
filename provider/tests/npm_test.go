@@ -52,9 +52,7 @@ func TestNpmCommand(t *testing.T) {
 				"packages": resource.PropertyValue{V: []resource.PropertyValue{
 					{V: "@cdk-cloudformation/alexa-ask-skill"},
 				}},
-				"deps": resource.MakeComputed(resource.PropertyValue{V: resource.PropertyMap{
-					"@cdk-cloudformation/alexa-ask-skill": resource.PropertyValue{V: "0.0.0-alpha.7"},
-				}}),
+				"deps": resource.MakeComputed(resource.PropertyValue{V: resource.PropertyMap{}}),
 			},
 		},
 		{
@@ -122,7 +120,9 @@ func TestNpmCommand(t *testing.T) {
 			expected: resource.PropertyMap{
 				"location": resource.PropertyValue{V: loc},
 				"packages": resource.PropertyValue{V: []resource.PropertyValue{}},
-				"deps":     resource.MakeComputed(resource.PropertyValue{V: resource.PropertyMap{}}),
+				"deps": resource.MakeComputed(resource.PropertyValue{V: resource.PropertyMap{
+					"@cdk-cloudformation/alexa-ask-skill": resource.PropertyValue{V: "0.0.0-alpha.7"},
+				}}),
 			},
 		},
 		{
@@ -169,8 +169,7 @@ func TestNpmCommand(t *testing.T) {
 					{V: "@cdk-cloudformation/registry-test-resource1-module"},
 				}},
 				"deps": resource.MakeComputed(resource.PropertyValue{V: resource.PropertyMap{
-					"@cdk-cloudformation/alexa-ask-skill":                resource.PropertyValue{V: "0.0.0-alpha.7"},
-					"@cdk-cloudformation/registry-test-resource1-module": resource.PropertyValue{V: "1.5.0-alpha.7"},
+					"@cdk-cloudformation/alexa-ask-skill": resource.PropertyValue{V: "0.0.0-alpha.7"},
 				}}),
 			},
 		},
@@ -191,10 +190,15 @@ func TestNpmCommand(t *testing.T) {
 					"location": resource.PropertyValue{V: loc},
 					"packages": resource.PropertyValue{V: []resource.PropertyValue{}},
 				}
+				rResp, err := cmd.Read(p.ReadRequest{
+					Urn:        urn,
+					Properties: olds,
+					Inputs:     news,
+				})
 				dResp, err := cmd.Diff(p.DiffRequest{
 					Urn:  urn,
-					Olds: olds,
-					News: news,
+					Olds: rResp.Properties,
+					News: rResp.Inputs,
 				})
 				require.NoError(t, err)
 				assert.Equal(t, dResp.HasChanges, true)
@@ -211,7 +215,9 @@ func TestNpmCommand(t *testing.T) {
 			expected: resource.PropertyMap{
 				"location": resource.PropertyValue{V: loc},
 				"packages": resource.PropertyValue{V: []resource.PropertyValue{}},
-				"deps":     resource.PropertyValue{V: resource.PropertyMap{}},
+				"deps": resource.PropertyValue{V: resource.PropertyMap{
+					"@cdk-cloudformation/alexa-ask-skill": resource.PropertyValue{V: "0.0.0-alpha.7"},
+				}},
 			},
 		},
 	}

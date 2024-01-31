@@ -118,7 +118,7 @@ func (*File) Update(ctx p.Context, id string, olds FileState, news FileArgs, pre
 		return *state, nil
 	}
 	newContentString := strings.Join(news.Content, "\n")
-	f, err := os.Create(olds.Path)
+	f, err := os.Create(news.Path)
 	if err != nil {
 		return FileState{}, err
 	}
@@ -155,18 +155,17 @@ func (*File) Diff(ctx p.Context, id string, olds FileState, news FileArgs) (p.Di
 }
 
 func (*File) Read(ctx p.Context, id string, inputs FileArgs, state FileState) (canonicalID string, normalizedInputs FileArgs, normalizedState FileState, err error) {
-	path := id
-	byteContent, err := os.ReadFile(path)
+	byteContent, err := os.ReadFile(state.Path)
 	if err != nil {
 		return "", FileArgs{}, FileState{}, err
 	}
 	content := string(byteContent)
-	return path, FileArgs{
-			Path:    path,
+	return id, FileArgs{
+			Path:    inputs.Path,
 			Force:   inputs.Force,
 			Content: inputs.Content,
 		}, FileState{
-			Path:    path,
+			Path:    state.Path,
 			Force:   state.Force,
 			Content: strings.Split(content, "\n"),
 		}, nil

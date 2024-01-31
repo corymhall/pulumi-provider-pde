@@ -142,7 +142,7 @@ func (s *Npm) Create(ctx p.Context, name string, input NpmArgs, preview bool) (s
 func (s *Npm) Update(ctx p.Context, name string, olds NpmState, news NpmArgs, preview bool) (NpmState, error) {
 	state := &NpmState{
 		NpmArgs: news,
-		Deps:    map[string]string{},
+		Deps:    olds.Deps,
 	}
 
 	if preview {
