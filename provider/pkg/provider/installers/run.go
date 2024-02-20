@@ -48,7 +48,7 @@ func (c *CommandOutputs) run(ctx p.Context, command, dir string) (string, error)
 	// }
 
 	stdouterrch := make(chan struct{})
-	go util.CopyOutput(ctx, r, stdouterrch, diag.Info)
+	go util.CopyOutput(ctx, r, stdouterrch, diag.Debug)
 
 	err = cmd.Start()
 	if err == nil {

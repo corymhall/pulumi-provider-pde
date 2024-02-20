@@ -11,14 +11,12 @@ import (
 	"golang.org/x/exp/slices"
 
 	"github.com/pulumi/pulumi-go-provider/infer"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/diag"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 )
 
-const MAGIC_STRING = "XXXXXX"
-
 type Npm struct{}
 
-var _ = (infer.CustomRead[NpmArgs, NpmState])((*Npm)(nil))
 var _ = (infer.CustomUpdate[NpmArgs, NpmState])((*Npm)(nil))
 var _ = (infer.CustomDiff[NpmArgs, NpmState])((*Npm)(nil))
 var _ = (infer.CustomDelete[NpmState])((*Npm)(nil))
@@ -31,7 +29,7 @@ type NpmArgs struct {
 
 type NpmState struct {
 	NpmArgs
-	Deps map[string]string `pulumi:"deps"`
+	Deps *map[string]string `pulumi:"deps"`
 }
 
 func (s *Npm) Annotate(a infer.Annotator) {
@@ -56,42 +54,34 @@ func (s *Npm) Check(ctx p.Context, name string, oldInputs, newInputs resource.Pr
 	return infer.DefaultCheck[NpmArgs](newInputs)
 }
 
-func (s *Npm) Read(ctx p.Context, id string, inputs NpmArgs, state NpmState) (
-	canonicalID string, normalizedInputs NpmArgs, normalizedState NpmState, err error,
-) {
-
-	c := &CommandOutputs{}
-
-	for k := range state.Deps {
-		cmd := fmt.Sprintf("npm view %s version", k)
-		v, err := c.run(ctx, cmd, *state.Location)
-		if err != nil {
-			return "", NpmArgs{}, NpmState{}, err
-		}
-		// if they are not equal, prefix the version with our magic string
-		// that we can modify in ModifyPlan
-		if strings.TrimSpace(v) != state.Deps[k] {
-			// state.Deps[k] = fmt.Sprintf("%s%s", MAGIC_STRING, v)
-			state.Deps[k] = v
-		}
-	}
-	return id, inputs, state, nil
-}
-
 func (s *Npm) Diff(ctx p.Context, id string, olds NpmState, news NpmArgs) (p.DiffResponse, error) {
 	diff := map[string]p.PropertyDiff{}
 	if *news.Location != *olds.Location {
-		diff["location"] = p.PropertyDiff{Kind: p.UpdateReplace}
+		diff["location"] = p.PropertyDiff{Kind: p.UpdateReplace, InputDiff: true}
 	}
 
 	for _, o := range *olds.Packages {
 		if !slices.Contains(*news.Packages, o) {
-			diff["packages"] = p.PropertyDiff{Kind: p.Update}
+			diff["packages"] = p.PropertyDiff{Kind: p.Update, InputDiff: true}
 		}
 	}
 	for _, n := range *news.Packages {
 		if !slices.Contains(*olds.Packages, n) {
-			diff["packages"] = p.PropertyDiff{Kind: p.Update}
+			diff["packages"] = p.PropertyDiff{Kind: p.Update, InputDiff: true}
+		}
+	}
+
+	c := &CommandOutputs{}
+	deps := *olds.Deps
+	for k := range deps {
+		cmd := fmt.Sprintf("npm view %s version", k)
+		v, err := c.run(ctx, cmd, *olds.Location)
+		if err != nil {
+			return p.DiffResponse{}, err
+		}
+		if strings.TrimSpace(v) != deps[k] {
+			ctx.Logf(diag.Debug, "%s: old version: %s, new version: %s", k, deps[k], v)
+			diff["deps"] = p.PropertyDiff{Kind: p.Update, InputDiff: false}
 		}
 	}
 
@@ -105,7 +95,7 @@ func (s *Npm) Diff(ctx p.Context, id string, olds NpmState, news NpmArgs) (p.Dif
 func (s *Npm) Create(ctx p.Context, name string, input NpmArgs, preview bool) (string, NpmState, error) {
 	state := &NpmState{
 		NpmArgs: input,
-		Deps:    map[string]string{},
+		Deps:    &map[string]string{},
 	}
 
 	if preview {
@@ -148,6 +138,10 @@ func (s *Npm) Update(ctx p.Context, name string, olds NpmState, news NpmArgs, pr
 	if preview {
 		return *state, nil
 	}
+	deps := *olds.Deps
+	for k := range *olds.Deps {
+		deps[k] = "latest"
+	}
 
 	if err := state.install(ctx); err != nil {
 		return NpmState{}, err
@@ -173,9 +167,10 @@ func (s *Npm) Delete(ctx p.Context, id string, props NpmState) error {
 func (n *NpmState) install(ctx p.Context) error {
 	c := &CommandOutputs{}
 
+	deps := *n.Deps
 	for _, p := range *n.Packages {
 		pkgVersion := "latest"
-		if v, ok := n.Deps[p]; ok {
+		if v, ok := deps[p]; ok {
 			pkgVersion = v
 		}
 		if _, err := c.run(ctx, fmt.Sprintf("npm install %s@%s", p, pkgVersion), *n.Location); err != nil {
@@ -190,8 +185,9 @@ func (n *NpmState) install(ctx p.Context) error {
 		if err != nil {
 			return err
 		}
-		n.Deps[p] = version
+		deps[p] = version
 	}
+	n.Deps = &deps
 
 	return nil
 }

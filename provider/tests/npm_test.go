@@ -190,15 +190,10 @@ func TestNpmCommand(t *testing.T) {
 					"location": resource.PropertyValue{V: loc},
 					"packages": resource.PropertyValue{V: []resource.PropertyValue{}},
 				}
-				rResp, err := cmd.Read(p.ReadRequest{
-					Urn:        urn,
-					Properties: olds,
-					Inputs:     news,
-				})
 				dResp, err := cmd.Diff(p.DiffRequest{
 					Urn:  urn,
-					Olds: rResp.Properties,
-					News: rResp.Inputs,
+					Olds: olds,
+					News: news,
 				})
 				require.NoError(t, err)
 				assert.Equal(t, dResp.HasChanges, true)
@@ -216,7 +211,7 @@ func TestNpmCommand(t *testing.T) {
 				"location": resource.PropertyValue{V: loc},
 				"packages": resource.PropertyValue{V: []resource.PropertyValue{}},
 				"deps": resource.PropertyValue{V: resource.PropertyMap{
-					"@cdk-cloudformation/alexa-ask-skill": resource.PropertyValue{V: "0.0.0-alpha.7"},
+					"@cdk-cloudformation/alexa-ask-skill": resource.PropertyValue{V: "latest"},
 				}},
 			},
 		},

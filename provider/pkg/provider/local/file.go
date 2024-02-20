@@ -18,7 +18,6 @@ var _ = (infer.CustomDelete[FileState])((*File)(nil))
 var _ = (infer.CustomCheck[FileArgs])((*File)(nil))
 var _ = (infer.CustomUpdate[FileArgs, FileState])((*File)(nil))
 var _ = (infer.CustomDiff[FileArgs, FileState])((*File)(nil))
-var _ = (infer.CustomRead[FileArgs, FileState])((*File)(nil))
 var _ = (infer.ExplicitDependencies[FileArgs, FileState])((*File)(nil))
 var _ = (infer.Annotated)((*File)(nil))
 var _ = (infer.Annotated)((*FileArgs)(nil))
@@ -136,9 +135,14 @@ func (*File) Update(ctx p.Context, id string, olds FileState, news FileArgs, pre
 
 func (*File) Diff(ctx p.Context, id string, olds FileState, news FileArgs) (p.DiffResponse, error) {
 	diff := map[string]p.PropertyDiff{}
+	byteContent, err := os.ReadFile(olds.Path)
+	if err != nil {
+		return p.DiffResponse{}, err
+	}
+	content := string(byteContent)
 	newContentString := strings.Join(news.Content, "\n")
 	oldContentString := strings.Join(olds.Content, "\n")
-	if newContentString != oldContentString {
+	if newContentString != oldContentString || newContentString != content {
 		diff["content"] = p.PropertyDiff{Kind: p.Update}
 	}
 	if news.Force != olds.Force {
@@ -152,23 +156,6 @@ func (*File) Diff(ctx p.Context, id string, olds FileState, news FileArgs) (p.Di
 		HasChanges:          len(diff) > 0,
 		DetailedDiff:        diff,
 	}, nil
-}
-
-func (*File) Read(ctx p.Context, id string, inputs FileArgs, state FileState) (canonicalID string, normalizedInputs FileArgs, normalizedState FileState, err error) {
-	byteContent, err := os.ReadFile(state.Path)
-	if err != nil {
-		return "", FileArgs{}, FileState{}, err
-	}
-	content := string(byteContent)
-	return id, FileArgs{
-			Path:    inputs.Path,
-			Force:   inputs.Force,
-			Content: inputs.Content,
-		}, FileState{
-			Path:    state.Path,
-			Force:   state.Force,
-			Content: strings.Split(content, "\n"),
-		}, nil
 }
 
 func (*File) WireDependencies(f infer.FieldSelector, args *FileArgs, state *FileState) {

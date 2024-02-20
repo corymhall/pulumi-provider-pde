@@ -9,6 +9,7 @@ require (
 	github.com/pulumi/pulumi-command/provider v0.0.0-20240112221901-2fe00b62fa4d
 	github.com/pulumi/pulumi-go-provider v0.14.0
 	github.com/pulumi/pulumi/sdk/v3 v3.102.0
+	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a
 )
 
 require (
@@ -86,7 +87,6 @@ require (
 	github.com/zclconf/go-cty v1.14.2 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	golang.org/x/crypto v0.18.0 // indirect
-	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a // indirect
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/net v0.20.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect

@@ -24,7 +24,6 @@ const (
 
 type GitHubRepo struct{}
 
-var _ = (infer.CustomRead[GitHubRepoArgs, GitHubRepoState])((*GitHubRepo)(nil))
 var _ = (infer.CustomUpdate[GitHubRepoArgs, GitHubRepoState])((*GitHubRepo)(nil))
 var _ = (infer.CustomDelete[GitHubRepoState])((*GitHubRepo)(nil))
 var _ = (infer.CustomDiff[GitHubRepoArgs, GitHubRepoState])((*GitHubRepo)(nil))
@@ -58,10 +57,14 @@ func (l *GitHubRepoState) Annotate(a infer.Annotator) {
 
 func (l *GitHubRepo) Diff(ctx p.Context, id string, olds GitHubRepoState, news GitHubRepoArgs) (p.DiffResponse, error) {
 	diff := map[string]p.PropertyDiff{}
+
+	checkVersion := true
+
 	if news.Branch == nil || *news.Branch != *olds.Branch {
 		diff["branch"] = p.PropertyDiff{Kind: p.Update}
 	}
 	if news.FolderName == nil || *news.FolderName != *olds.FolderName {
+		checkVersion = false
 		diff["folderName"] = p.PropertyDiff{Kind: p.UpdateReplace}
 	}
 	var newInstall string
@@ -77,10 +80,12 @@ func (l *GitHubRepo) Diff(ctx p.Context, id string, olds GitHubRepoState, news G
 		diff["installCommands"] = p.PropertyDiff{Kind: p.Update}
 	}
 	if *news.Org != *olds.Org {
+		checkVersion = false
 		diff["org"] = p.PropertyDiff{Kind: p.UpdateReplace}
 	}
 
 	if *news.Repo != *olds.Repo {
+		checkVersion = false
 		diff["repo"] = p.PropertyDiff{Kind: p.UpdateReplace}
 	}
 
@@ -94,6 +99,19 @@ func (l *GitHubRepo) Diff(ctx p.Context, id string, olds GitHubRepoState, news G
 	}
 	if newUpdate != oldUpdate {
 		diff["updateCommands"] = p.PropertyDiff{Kind: p.Update}
+	}
+
+	if checkVersion {
+		_, err := olds.run(ctx, fetchCmd, *olds.AbsFolderName)
+		if err != nil {
+			return p.DiffResponse{}, err
+		}
+
+		versionCmd := fmt.Sprintf("git rev-parse origin/%s", *news.Branch)
+		version, err := olds.run(ctx, versionCmd, *olds.AbsFolderName)
+		if version != *olds.Version {
+			diff["version"] = p.PropertyDiff{Kind: p.Update, InputDiff: false}
+		}
 	}
 
 	return p.DiffResponse{
@@ -136,22 +154,6 @@ func (l *GitHubRepo) Create(ctx p.Context, name string, input GitHubRepoArgs, pr
 	return name, *state, nil
 }
 
-// used for import operation
-func (l *GitHubRepo) Read(ctx p.Context, id string, inputs GitHubRepoArgs, state GitHubRepoState) (
-	canonicalID string, normalizedInputs GitHubRepoArgs, normalizedState GitHubRepoState, err error) {
-
-	_, err = state.run(ctx, fetchCmd, *state.AbsFolderName)
-	if err != nil {
-		return "", GitHubRepoArgs{}, GitHubRepoState{}, err
-	}
-
-	versionCmd := fmt.Sprintf("git rev-parse origin/%s", *state.Branch)
-	version, err := state.run(ctx, versionCmd, *state.AbsFolderName)
-	state.Version = &version
-	return "", inputs, state, nil
-
-}
-
 func (l *GitHubRepo) Check(ctx p.Context, name string, oldInputs, newInputs resource.PropertyMap) (GitHubRepoArgs, []p.CheckFailure, error) {
 	if _, ok := newInputs["branch"]; !ok {
 		newInputs["branch"] = resource.NewStringProperty("main")
@@ -167,7 +169,9 @@ func (l *GitHubRepo) Update(ctx p.Context, name string, olds GitHubRepoState, ne
 	state := &GitHubRepoState{
 		GitHubRepoArgs: news,
 		AbsFolderName:  olds.AbsFolderName,
-		BaseOutputs:    olds.BaseOutputs,
+		BaseOutputs: BaseOutputs{
+			Version: olds.Version,
+		},
 		CommandOutputs: olds.CommandOutputs,
 	}
 

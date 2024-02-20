@@ -14,7 +14,6 @@ import (
 
 type Shell struct{}
 
-var _ = (infer.CustomRead[ShellArgs, ShellState])((*Shell)(nil))
 var _ = (infer.CustomUpdate[ShellArgs, ShellState])((*Shell)(nil))
 var _ = (infer.CustomDiff[ShellArgs, ShellState])((*Shell)(nil))
 var _ = (infer.CustomDelete[ShellState])((*Shell)(nil))
@@ -132,20 +131,6 @@ func (l *Shell) Create(ctx p.Context, name string, input ShellArgs, preview bool
 		return "", ShellState{}, err
 	}
 	return name, *state, nil
-}
-
-func (l *Shell) Read(ctx p.Context, id string, inputs ShellArgs, state ShellState) (
-	canonicalID string, normalizedInputs ShellArgs, normalizedState ShellState, err error) {
-
-	if inputs.VersionCommand != nil {
-		output, err := state.run(ctx, *inputs.VersionCommand, os.TempDir())
-		if err != nil {
-			return "", ShellArgs{}, ShellState{}, err
-		}
-		state.Version = &output
-	}
-
-	return id, inputs, state, nil
 }
 
 func (l *Shell) Check(ctx p.Context, name string, oldInputs, newInputs resource.PropertyMap) (ShellArgs, []p.CheckFailure, error) {

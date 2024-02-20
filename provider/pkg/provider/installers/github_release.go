@@ -55,7 +55,6 @@ func (l *GitHubReleaseState) Annotate(a infer.Annotator) {
 	a.Describe(&l.Locations, "The locations the program was installed to")
 }
 
-var _ = (infer.CustomRead[GitHubReleaseArgs, GitHubReleaseState])((*GitHubRelease)(nil))
 var _ = (infer.CustomUpdate[GitHubReleaseArgs, GitHubReleaseState])((*GitHubRelease)(nil))
 var _ = (infer.CustomDiff[GitHubReleaseArgs, GitHubReleaseState])((*GitHubRelease)(nil))
 var _ = (infer.CustomDelete[GitHubReleaseState])((*GitHubRelease)(nil))
@@ -74,7 +73,7 @@ func (l *GitHubRelease) Diff(ctx p.Context, id string, olds GitHubReleaseState, 
 	}
 
 	if newInstall != oldInstall {
-		diff["installCommands"] = p.PropertyDiff{Kind: p.Update}
+		diff["installCommands"] = p.PropertyDiff{Kind: p.Update, InputDiff: true}
 	}
 	var newUninstall string
 	var oldUninstall string
@@ -85,7 +84,7 @@ func (l *GitHubRelease) Diff(ctx p.Context, id string, olds GitHubReleaseState, 
 		oldUninstall = strings.Join(*olds.UninstallCommands, " && ")
 	}
 	if newUninstall != oldUninstall {
-		diff["uninstallCommands"] = p.PropertyDiff{Kind: p.Update}
+		diff["uninstallCommands"] = p.PropertyDiff{Kind: p.Update, InputDiff: true}
 	}
 
 	var newUpdate string
@@ -97,24 +96,24 @@ func (l *GitHubRelease) Diff(ctx p.Context, id string, olds GitHubReleaseState, 
 		oldUpdate = strings.Join(*olds.UpdateCommands, " && ")
 	}
 	if newUpdate != oldUpdate {
-		diff["updateCommands"] = p.PropertyDiff{Kind: p.Update}
+		diff["updateCommands"] = p.PropertyDiff{Kind: p.Update, InputDiff: true}
 	}
 
-	pdiff := p.PropertyDiff{Kind: p.UpdateReplace}
+	pdiff := p.PropertyDiff{Kind: p.UpdateReplace, InputDiff: true}
 	if newUpdate != "" {
-		pdiff = p.PropertyDiff{Kind: p.Update}
-
+		pdiff = p.PropertyDiff{Kind: p.Update, InputDiff: true}
 	}
+
 	if *news.AssetName != *news.AssetName {
 		diff["assetName"] = pdiff
 	}
 
 	if *news.Org != *olds.Org {
-		diff["org"] = p.PropertyDiff{Kind: p.UpdateReplace}
+		diff["org"] = p.PropertyDiff{Kind: p.UpdateReplace, InputDiff: true}
 	}
 
 	if *news.Repo != *olds.Repo {
-		diff["repo"] = p.PropertyDiff{Kind: p.UpdateReplace}
+		diff["repo"] = p.PropertyDiff{Kind: p.UpdateReplace, InputDiff: true}
 	}
 
 	if (news.ReleaseVersion == nil && news.ReleaseVersion != olds.ReleaseVersion) ||
@@ -277,26 +276,6 @@ func getReleaseAssetName(
 		}
 	}
 	return "", nil
-}
-
-func (l *GitHubRelease) Read(ctx p.Context, id string, inputs GitHubReleaseArgs, state GitHubReleaseState) (
-	canonicalID string, normalizedInputs GitHubReleaseArgs, normalizedState GitHubReleaseState, err error) {
-
-	if inputs.ReleaseVersion != nil {
-		return id, inputs, state, nil
-	}
-	client := github.NewClient(nil)
-	if val, ok := os.LookupEnv("GITHUB_TOKEN"); ok {
-		client.WithAuthToken(val)
-	}
-
-	release, _, err := client.Repositories.GetLatestRelease(ctx, *inputs.Org, *inputs.Repo)
-	if err != nil {
-		return "", GitHubReleaseArgs{}, GitHubReleaseState{}, err
-	}
-	state.ReleaseVersion = release.TagName
-
-	return id, inputs, state, nil
 }
 
 func (l *GitHubRelease) Check(ctx p.Context, name string, oldInputs, newInputs resource.PropertyMap) (GitHubReleaseArgs, []p.CheckFailure, error) {
