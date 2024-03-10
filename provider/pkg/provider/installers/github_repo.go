@@ -127,7 +127,7 @@ func (l *GitHubRepo) Create(ctx p.Context, name string, input GitHubRepoArgs, pr
 		GitHubRepoArgs: input,
 	}
 
-	if err := state.getLocation(ctx, &input); err != nil {
+	if err := state.getLocation(&input); err != nil {
 		return "", GitHubRepoState{}, err
 	}
 	if preview {
@@ -179,7 +179,7 @@ func (l *GitHubRepo) Update(ctx p.Context, name string, olds GitHubRepoState, ne
 		return *state, nil
 	}
 
-	if err := state.getLocation(ctx, &news); err != nil {
+	if err := state.getLocation(&news); err != nil {
 		return GitHubRepoState{}, err
 	}
 
@@ -227,12 +227,13 @@ func (l *GitHubRepo) Delete(ctx p.Context, id string, props GitHubRepoState) err
 	return nil
 }
 
-func (o *GitHubRepoState) getLocation(ctx p.Context, inputs *GitHubRepoArgs) error {
+func (o *GitHubRepoState) getLocation(inputs *GitHubRepoArgs) error {
 	dir, err := os.UserHomeDir()
 	if err != nil {
 		return err
 	}
-	absPath := path.Join(dir, *inputs.FolderName)
+	parent := path.Dir(*inputs.FolderName)
+	absPath := path.Join(dir, parent)
 	_, err = os.Lstat(absPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -241,6 +242,7 @@ func (o *GitHubRepoState) getLocation(ctx p.Context, inputs *GitHubRepoArgs) err
 			return err
 		}
 	}
+	absPath = path.Join(dir, *inputs.FolderName)
 	o.AbsFolderName = &absPath
 	return nil
 }
@@ -252,7 +254,7 @@ func (o *GitHubRepoState) clone(ctx p.Context, inputs GitHubRepoArgs) error {
 		*inputs.Branch,
 		*inputs.Org,
 		*inputs.Repo,
-		*inputs.FolderName,
+		path.Base(*inputs.FolderName),
 	)
 
 	// clone the repo
