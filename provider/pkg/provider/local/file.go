@@ -133,6 +133,19 @@ func (*File) Update(ctx p.Context, id string, olds FileState, news FileArgs, pre
 	return *state, nil
 }
 
+func (l *File) Read(ctx p.Context, id string, inputs FileArgs, state FileState) (
+	canonicalID string, normalizedInputs FileArgs, normalizedState FileState, err error) {
+	_, err = os.Lstat(inputs.Path)
+	if err == nil {
+		byteContent, err := os.ReadFile(inputs.Path)
+		if err != nil {
+			return "", FileArgs{}, FileState{}, fmt.Errorf("error reading file: %w", err)
+		}
+		state.Content = strings.Split(string(byteContent), "\n")
+	}
+	return id, inputs, state, nil
+}
+
 func (*File) Diff(ctx p.Context, id string, olds FileState, news FileArgs) (p.DiffResponse, error) {
 	diff := map[string]p.PropertyDiff{}
 	byteContent, err := os.ReadFile(olds.Path)

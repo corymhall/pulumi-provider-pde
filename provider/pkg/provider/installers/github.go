@@ -7,8 +7,8 @@ import (
 type GitHubBaseInputs struct {
 	BaseInputs
 	InstallCommands *[]string `pulumi:"installCommands,optional"`
-	Org             *string   `pulumi:"org"`
-	Repo            *string   `pulumi:"repo"`
+	Org             string    `pulumi:"org"`
+	Repo            string    `pulumi:"repo"`
 }
 
 func (g *GitHubBaseInputs) Annotate(a infer.Annotator) {

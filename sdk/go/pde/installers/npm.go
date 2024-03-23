@@ -20,12 +20,12 @@ import (
 type Npm struct {
 	pulumi.CustomResourceState
 
-	// The npm packages that have been installed and their versions
-	Deps pulumi.StringMapOutput `pulumi:"deps"`
-	// The location to create the local node project
+	// The location of the node project
 	Location pulumi.StringOutput `pulumi:"location"`
-	// The npm packages to install
-	Packages pulumi.StringArrayOutput `pulumi:"packages"`
+	// The npm package to install
+	Package pulumi.StringOutput `pulumi:"package"`
+	// The version of the package to install
+	Version pulumi.StringPtrOutput `pulumi:"version"`
 }
 
 // NewNpm registers a new resource with the given unique name, arguments, and options.
@@ -38,8 +38,8 @@ func NewNpm(ctx *pulumi.Context,
 	if args.Location == nil {
 		return nil, errors.New("invalid value for required argument 'Location'")
 	}
-	if args.Packages == nil {
-		return nil, errors.New("invalid value for required argument 'Packages'")
+	if args.Package == nil {
+		return nil, errors.New("invalid value for required argument 'Package'")
 	}
 	opts = internal.PkgResourceDefaultOpts(opts)
 	var resource Npm
@@ -74,18 +74,22 @@ func (NpmState) ElementType() reflect.Type {
 }
 
 type npmArgs struct {
-	// The location to create the local node project
+	// The location of the node project
 	Location string `pulumi:"location"`
-	// The npm packages to install
-	Packages []string `pulumi:"packages"`
+	// The npm package to install
+	Package string `pulumi:"package"`
+	// The version of the package to install
+	Version *string `pulumi:"version"`
 }
 
 // The set of arguments for constructing a Npm resource.
 type NpmArgs struct {
-	// The location to create the local node project
+	// The location of the node project
 	Location pulumi.StringInput
-	// The npm packages to install
-	Packages pulumi.StringArrayInput
+	// The npm package to install
+	Package pulumi.StringInput
+	// The version of the package to install
+	Version pulumi.StringPtrInput
 }
 
 func (NpmArgs) ElementType() reflect.Type {
@@ -175,19 +179,19 @@ func (o NpmOutput) ToNpmOutputWithContext(ctx context.Context) NpmOutput {
 	return o
 }
 
-// The npm packages that have been installed and their versions
-func (o NpmOutput) Deps() pulumi.StringMapOutput {
-	return o.ApplyT(func(v *Npm) pulumi.StringMapOutput { return v.Deps }).(pulumi.StringMapOutput)
-}
-
-// The location to create the local node project
+// The location of the node project
 func (o NpmOutput) Location() pulumi.StringOutput {
 	return o.ApplyT(func(v *Npm) pulumi.StringOutput { return v.Location }).(pulumi.StringOutput)
 }
 
-// The npm packages to install
-func (o NpmOutput) Packages() pulumi.StringArrayOutput {
-	return o.ApplyT(func(v *Npm) pulumi.StringArrayOutput { return v.Packages }).(pulumi.StringArrayOutput)
+// The npm package to install
+func (o NpmOutput) Package() pulumi.StringOutput {
+	return o.ApplyT(func(v *Npm) pulumi.StringOutput { return v.Package }).(pulumi.StringOutput)
+}
+
+// The version of the package to install
+func (o NpmOutput) Version() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *Npm) pulumi.StringPtrOutput { return v.Version }).(pulumi.StringPtrOutput)
 }
 
 type NpmArrayOutput struct{ *pulumi.OutputState }

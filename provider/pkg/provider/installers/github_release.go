@@ -108,11 +108,11 @@ func (l *GitHubRelease) Diff(ctx p.Context, id string, olds GitHubReleaseState, 
 		diff["assetName"] = pdiff
 	}
 
-	if *news.Org != *olds.Org {
+	if news.Org != olds.Org {
 		diff["org"] = p.PropertyDiff{Kind: p.UpdateReplace, InputDiff: true}
 	}
 
-	if *news.Repo != *olds.Repo {
+	if news.Repo != olds.Repo {
 		diff["repo"] = p.PropertyDiff{Kind: p.UpdateReplace, InputDiff: true}
 	}
 
@@ -139,7 +139,7 @@ func (l *GitHubRelease) Create(ctx p.Context, name string, input GitHubReleaseAr
 		if val, ok := os.LookupEnv("GITHUB_TOKEN"); ok {
 			client.WithAuthToken(val)
 		}
-		downloadUrl, err := getReleaseDownloadURL(ctx, client, *input.Org, *input.Repo, *input.ReleaseVersion, *input.AssetName)
+		downloadUrl, err := getReleaseDownloadURL(ctx, client, input.Org, input.Repo, *input.ReleaseVersion, *input.AssetName)
 		if err != nil {
 			return "", GitHubReleaseState{}, err
 		}
@@ -182,15 +182,15 @@ func (o *GitHubReleaseState) createOrUpdate(ctx p.Context, commands []string, in
 	// e.g. if they provided /usr/local/bin/terraform, then use terraform as the executable name
 	if input.Executable != nil {
 		parts := strings.Split(*input.Executable, "/")
-		exName = &parts[len(parts)-1]
+		exName = parts[len(parts)-1]
 		ex = true
 	}
 	shellInputs := &ShellArgs{
 		BaseInputs:      input.BaseInputs,
 		BinLocation:     input.BinLocation,
-		InstallCommands: input.InstallCommands,
+		InstallCommands: *input.InstallCommands,
 		ProgramName:     exName,
-		DownloadURL:     o.DownloadURL,
+		DownloadURL:     *o.DownloadURL,
 		Executable:      &ex,
 	}
 
@@ -278,47 +278,65 @@ func getReleaseAssetName(
 	return "", nil
 }
 
+func (l *GitHubRelease) Read(ctx p.Context, id string, inputs GitHubReleaseArgs, state GitHubReleaseState) (
+	canonicalID string, normalizedInputs GitHubReleaseArgs, normalizedState GitHubReleaseState, err error) {
+
+	if inputs.ReleaseVersion != nil {
+		return id, inputs, state, nil
+	}
+	client := github.NewClient(nil)
+	if val, ok := os.LookupEnv("GITHUB_TOKEN"); ok {
+		client.WithAuthToken(val)
+	}
+
+	release, _, err := client.Repositories.GetLatestRelease(ctx, inputs.Org, inputs.Repo)
+	if err != nil {
+		return "", GitHubReleaseArgs{}, GitHubReleaseState{}, err
+	}
+	inputs.ReleaseVersion = release.TagName
+
+	assetName, err := getReleaseAssetName(ctx, client, inputs.Org, inputs.Repo, *state.ReleaseVersion, *inputs.AssetName)
+	inputs.AssetName = &assetName
+
+	return id, inputs, state, nil
+}
+
 func (l *GitHubRelease) Check(ctx p.Context, name string, oldInputs, newInputs resource.PropertyMap) (GitHubReleaseArgs, []p.CheckFailure, error) {
 	client := github.NewClient(nil)
 	if val, ok := os.LookupEnv("GITHUB_TOKEN"); ok {
 		client.WithAuthToken(val)
 	}
-	org := newInputs["org"].StringValue()
-	repo := newInputs["repo"].StringValue()
 	failures := []p.CheckFailure{}
-	var version string
-	if _, ok := newInputs["releaseVersion"]; !ok {
-		release, _, err := client.Repositories.GetLatestRelease(ctx, org, repo)
+
+	// then this is a create operation
+	assetName := newInputs["assetName"].StringValue()
+	releaseVersion := newInputs["releaseVersion"].StringValue()
+	if _, ok := oldInputs["org"]; !ok {
+		_, inputs, _, err := l.Read(ctx, name, GitHubReleaseArgs{
+			GitHubBaseInputs: GitHubBaseInputs{
+				Org:  newInputs["org"].StringValue(),
+				Repo: newInputs["repo"].StringValue(),
+			},
+			AssetName:      &assetName,
+			ReleaseVersion: &releaseVersion,
+		}, GitHubReleaseState{})
 		if err != nil {
-			failures = append(failures, p.CheckFailure{Property: "releaseVersion", Reason: err.Error()})
-			return GitHubReleaseArgs{}, failures, nil
+			return GitHubReleaseArgs{}, nil, err
 		}
-		newInputs["releaseVersion"] = resource.NewStringProperty(*release.TagName)
-		version = *release.TagName
+		newInputs["assetName"] = resource.NewStringProperty(*inputs.AssetName)
+		newInputs["releaseVersion"] = resource.NewStringProperty(*inputs.ReleaseVersion)
 	} else {
-		version = newInputs["releaseVersion"].StringValue()
-	}
-	var inputAsssetName string
-	if val, ok := newInputs["assetName"]; ok {
-		inputAsssetName = val.StringValue()
-	}
-	assetName, err := getReleaseAssetName(ctx, client, org, repo, version, inputAsssetName)
-	if err != nil {
-		failures = append(failures, p.CheckFailure{Property: "releaseVersion", Reason: err.Error()})
-		return GitHubReleaseArgs{}, failures, nil
-	}
-	newInputs["assetName"] = resource.NewStringProperty(assetName)
-
-	if _, ok := newInputs["binLocation"]; !ok {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			failures = append(failures, p.CheckFailure{Property: "binLocation", Reason: err.Error()})
-			return GitHubReleaseArgs{}, failures, nil
+		// this is an update operation
+		if _, ok := newInputs["releaseVersion"]; !ok {
+			newInputs["releaseVersion"] = oldInputs["releaseVersion"]
 		}
-		binLocation := path.Join(home, ".local", "bin")
-		newInputs["binLocation"] = resource.NewStringProperty(binLocation)
+		if _, ok := newInputs["assetName"]; !ok {
+			newInputs["assetName"] = oldInputs["assetName"]
+		}
+		if _, ok := newInputs["binLocation"]; !ok {
+			newInputs["binLocation"] = oldInputs["binLocation"]
+		}
 	}
-
 	inputs, fails, err := infer.DefaultCheck[GitHubReleaseArgs](newInputs)
 	return inputs, append(failures, fails...), err
 }
@@ -329,19 +347,19 @@ func (l *GitHubRelease) Update(ctx p.Context, name string, olds GitHubReleaseSta
 		DownloadURL:       olds.DownloadURL,
 		Locations:         olds.Locations,
 	}
-	if news.AssetName != nil {
-		client := github.NewClient(nil)
-		if val, ok := os.LookupEnv("GITHUB_TOKEN"); ok {
-			client.WithAuthToken(val)
-		}
-		downloadUrl, err := getReleaseDownloadURL(ctx, client, *news.Org, *news.Repo, *news.ReleaseVersion, *news.AssetName)
-		if err != nil {
-			return GitHubReleaseState{}, err
-		}
-		state.DownloadURL = &downloadUrl
-	} else {
-		return GitHubReleaseState{}, errors.New("assetName not defined, something went wrong!")
+
+	if news.AssetName == nil {
+		return GitHubReleaseState{}, errors.New("assetName not defined, something went wrong! Try running a refresh")
 	}
+	client := github.NewClient(nil)
+	if val, ok := os.LookupEnv("GITHUB_TOKEN"); ok {
+		client.WithAuthToken(val)
+	}
+	downloadUrl, err := getReleaseDownloadURL(ctx, client, news.Org, news.Repo, *news.ReleaseVersion, *news.AssetName)
+	if err != nil {
+		return GitHubReleaseState{}, err
+	}
+	state.DownloadURL = &downloadUrl
 
 	if preview {
 		return *state, nil

@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 
 	p "github.com/pulumi/pulumi-go-provider"
 
 	"github.com/pulumi/pulumi-go-provider/infer"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/diag"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
+	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
 // Each resource has a controlling struct.
@@ -116,26 +118,43 @@ func (l *Link) Create(ctx p.Context, name string, input LinkArgs, preview bool) 
 
 func (l *Link) Read(ctx p.Context, id string, inputs LinkArgs, state LinkState) (
 	canonicalID string, normalizedInputs LinkArgs, normalizedState LinkState, err error) {
-
-	sExists, err := os.Lstat(*inputs.Source)
-	if err != nil {
-		return "", LinkArgs{}, LinkState{}, err
-	}
-	f := false
-	state.Linked = &f
-	isDir := sExists.IsDir()
-	state.IsDir = &isDir
 	exists, err := os.Lstat(*inputs.Target)
-	ctx.Logf(diag.Warning, "target file", exists.Mode())
 	if err != nil {
 		state.Target = nil
 	} else {
-		if exists.Mode() != os.ModeSymlink {
-			b := false
-			state.Linked = &b
+		if inputs.Recursive != nil && *inputs.Recursive && exists.IsDir() {
+			sourceFiles := []string{}
+			sourceEntries, err := os.ReadDir(*inputs.Source)
+			if err != nil {
+				return id, inputs, state, nil
+			}
+			for _, e := range sourceEntries {
+				sourceFiles = append(sourceFiles, e.Name())
+			}
+			entries, err := os.ReadDir(*inputs.Target)
+			if err != nil {
+				return id, inputs, state, nil
+			}
+			allLinked := true
+			for _, de := range entries {
+				if slices.Contains(sourceFiles, de.Name()) {
+					stat, err := os.Lstat(filepath.Join(*inputs.Target, de.Name()))
+					if stat.Mode()&os.ModeSymlink == 0 || err != nil {
+						ctx.Logf(diag.Warning, "target file %s is not linked", filepath.Join(*inputs.Target, de.Name()))
+						allLinked = false
+					}
+				}
+			}
+			if allLinked == false {
+				state.Linked = pulumi.BoolRef(false)
+			} else {
+				state.Linked = pulumi.BoolRef(true)
+			}
+		} else if exists.Mode()&os.ModeSymlink == 0 {
+			ctx.Logf(diag.Warning, "target file is not linked")
+			state.Linked = pulumi.BoolRef(false)
 		} else {
-			b := true
-			state.Linked = &b
+			state.Linked = pulumi.BoolRef(true)
 		}
 	}
 	return id, inputs, state, nil
@@ -277,24 +296,15 @@ func contains(a string, b []string) bool {
 }
 
 func (l *LinkState) stats(input LinkArgs) error {
-	t := true
-	f := false
-	l.Linked = &t
 	file, err := os.Lstat(*input.Source)
 	if err != nil {
 		return err
 	}
 	if file.IsDir() {
-		l.IsDir = &t
+		l.IsDir = pulumi.BoolRef(true)
 	} else {
-		l.IsDir = &f
+		l.IsDir = pulumi.BoolRef(false)
 	}
-	file, err = os.Lstat(*input.Target)
-	if err != nil {
-		return err
-	}
-	if file.Mode() == os.ModeSymlink {
-		l.Linked = &t
-	}
+	l.Linked = pulumi.BoolRef(true)
 	return nil
 }

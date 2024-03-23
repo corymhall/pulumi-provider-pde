@@ -21,9 +21,9 @@ var _ = (infer.CustomCheck[ShellArgs])((*Shell)(nil))
 
 type ShellArgs struct {
 	BaseInputs
-	InstallCommands *[]string          `pulumi:"installCommands"`
-	ProgramName     *string            `pulumi:"programName"`
-	DownloadURL     *string            `pulumi:"downloadURL"`
+	InstallCommands []string           `pulumi:"installCommands"`
+	ProgramName     string             `pulumi:"programName"`
+	DownloadURL     string             `pulumi:"downloadURL"`
 	Environment     *map[string]string `pulumi:"environment,optional"`
 	Interpreter     *[]string          `pulumi:"interpreter,optional"`
 	VersionCommand  *string            `pulumi:"versionCommand,optional"`
@@ -63,7 +63,7 @@ func (l *Shell) Diff(ctx p.Context, id string, olds ShellState, news ShellArgs) 
 	if *news.BinLocation != *olds.BinLocation {
 		diff["binLocation"] = p.PropertyDiff{Kind: p.UpdateReplace}
 	}
-	if *news.DownloadURL != *olds.DownloadURL {
+	if news.DownloadURL != olds.DownloadURL {
 		diff["downloadURL"] = p.PropertyDiff{Kind: p.UpdateReplace}
 	}
 	if (news.Executable != nil && olds.Executable == nil) || (news.Executable == nil && olds.Executable != nil) {
@@ -75,10 +75,10 @@ func (l *Shell) Diff(ctx p.Context, id string, olds ShellState, news ShellArgs) 
 	var newInstall string
 	var oldInstall string
 	if news.InstallCommands != nil {
-		newInstall = strings.Join(*news.InstallCommands, " && ")
+		newInstall = strings.Join(news.InstallCommands, " && ")
 	}
 	if olds.InstallCommands != nil {
-		oldInstall = strings.Join(*olds.InstallCommands, " && ")
+		oldInstall = strings.Join(olds.InstallCommands, " && ")
 	}
 
 	if newInstall != oldInstall {
@@ -107,7 +107,7 @@ func (l *Shell) Diff(ctx p.Context, id string, olds ShellState, news ShellArgs) 
 	if newUpdate != oldUpdate {
 		diff["updateCommands"] = p.PropertyDiff{Kind: p.Update}
 	}
-	if *news.ProgramName != *olds.ProgramName {
+	if news.ProgramName != olds.ProgramName {
 		diff["programName"] = p.PropertyDiff{Kind: p.UpdateReplace}
 	}
 
@@ -116,6 +116,12 @@ func (l *Shell) Diff(ctx p.Context, id string, olds ShellState, news ShellArgs) 
 		HasChanges:          len(diff) > 0,
 		DetailedDiff:        diff,
 	}, nil
+}
+
+func (l *Shell) Read(ctx p.Context, id string, inputs ShellArgs, state ShellState) (
+	canonicalID string, normalizedInputs ShellArgs, normalizedState ShellState, err error) {
+
+	return id, inputs, state, nil
 }
 
 // All resources must implement Create at a minumum.
@@ -127,7 +133,7 @@ func (l *Shell) Create(ctx p.Context, name string, input ShellArgs, preview bool
 		return name, *state, nil
 	}
 
-	if err := state.createOrUpdate(ctx, input, *input.InstallCommands); err != nil {
+	if err := state.createOrUpdate(ctx, input, input.InstallCommands); err != nil {
 		return "", ShellState{}, err
 	}
 	return name, *state, nil
@@ -165,7 +171,7 @@ func (l *Shell) Update(ctx p.Context, name string, olds ShellState, news ShellAr
 	if news.UpdateCommands != nil {
 		commands = *news.UpdateCommands
 	} else {
-		commands = *news.InstallCommands
+		commands = news.InstallCommands
 	}
 	if err := state.createOrUpdate(ctx, news, commands); err != nil {
 		return ShellState{}, err
@@ -192,7 +198,7 @@ func (l *Shell) Delete(ctx p.Context, id string, props ShellState) error {
 
 func (s *ShellState) createOrUpdate(ctx p.Context, input ShellArgs, commands []string) error {
 	dir := os.TempDir()
-	_, err := s.run(ctx, fmt.Sprintf("curl -OL %s", *input.DownloadURL), dir)
+	_, err := s.run(ctx, fmt.Sprintf("curl -OL %s", input.DownloadURL), dir)
 	if err != nil {
 		return err
 	}
@@ -202,10 +208,10 @@ func (s *ShellState) createOrUpdate(ctx p.Context, input ShellArgs, commands []s
 	}
 
 	if input.Executable != nil && *input.Executable {
-		target := path.Join(*input.BinLocation, *input.ProgramName)
+		target := path.Join(*input.BinLocation, input.ProgramName)
 		s.Location = &target
 		// move it
-		if err = os.Rename(path.Join(dir, *input.ProgramName), target); err != nil {
+		if err = os.Rename(path.Join(dir, input.ProgramName), target); err != nil {
 			return err
 		}
 		// make executable

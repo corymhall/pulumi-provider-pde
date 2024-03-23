@@ -36,8 +36,7 @@ type GitHubRepo struct {
 	UninstallCommands pulumi.StringArrayOutput `pulumi:"uninstallCommands"`
 	// Optional Commands to run to update the program
 	UpdateCommands pulumi.StringArrayOutput `pulumi:"updateCommands"`
-	// The version of the program
-	Version pulumi.StringOutput `pulumi:"version"`
+	Version        pulumi.StringPtrOutput   `pulumi:"version"`
 }
 
 // NewGitHubRepo registers a new resource with the given unique name, arguments, and options.
@@ -100,6 +99,7 @@ type gitHubRepoArgs struct {
 	UninstallCommands []string `pulumi:"uninstallCommands"`
 	// Optional Commands to run to update the program
 	UpdateCommands []string `pulumi:"updateCommands"`
+	Version        *string  `pulumi:"version"`
 }
 
 // The set of arguments for constructing a GitHubRepo resource.
@@ -118,6 +118,7 @@ type GitHubRepoArgs struct {
 	UninstallCommands pulumi.StringArrayInput
 	// Optional Commands to run to update the program
 	UpdateCommands pulumi.StringArrayInput
+	Version        pulumi.StringPtrInput
 }
 
 func (GitHubRepoArgs) ElementType() reflect.Type {
@@ -257,9 +258,8 @@ func (o GitHubRepoOutput) UpdateCommands() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v *GitHubRepo) pulumi.StringArrayOutput { return v.UpdateCommands }).(pulumi.StringArrayOutput)
 }
 
-// The version of the program
-func (o GitHubRepoOutput) Version() pulumi.StringOutput {
-	return o.ApplyT(func(v *GitHubRepo) pulumi.StringOutput { return v.Version }).(pulumi.StringOutput)
+func (o GitHubRepoOutput) Version() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *GitHubRepo) pulumi.StringPtrOutput { return v.Version }).(pulumi.StringPtrOutput)
 }
 
 type GitHubRepoArrayOutput struct{ *pulumi.OutputState }

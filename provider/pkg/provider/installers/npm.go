@@ -1,17 +1,12 @@
 package installers
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
 
 	p "github.com/pulumi/pulumi-go-provider"
-	"golang.org/x/exp/slices"
 
 	"github.com/pulumi/pulumi-go-provider/infer"
-	"github.com/pulumi/pulumi/sdk/v3/go/common/diag"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 )
 
@@ -23,13 +18,13 @@ var _ = (infer.CustomDelete[NpmState])((*Npm)(nil))
 var _ = (infer.CustomCheck[NpmArgs])((*Npm)(nil))
 
 type NpmArgs struct {
-	Location *string   `pulumi:"location"`
-	Packages *[]string `pulumi:"packages"`
+	Location string  `pulumi:"location"`
+	Package  string  `pulumi:"package"`
+	Version  *string `pulumi:"version,optional"`
 }
 
 type NpmState struct {
 	NpmArgs
-	Deps *map[string]string `pulumi:"deps"`
 }
 
 func (s *Npm) Annotate(a infer.Annotator) {
@@ -42,47 +37,61 @@ are available globally.`)
 }
 
 func (s *NpmArgs) Annotate(a infer.Annotator) {
-	a.Describe(&s.Location, "The location to create the local node project")
-	a.Describe(&s.Packages, "The npm packages to install")
+	a.Describe(&s.Location, "The location of the node project")
+	a.Describe(&s.Package, "The npm package to install")
+	a.Describe(&s.Version, "The version of the package to install")
 }
 
-func (s *NpmState) Annotate(a infer.Annotator) {
-	a.Describe(&s.Deps, "The npm packages that have been installed and their versions")
-}
+func (s *NpmState) Annotate(a infer.Annotator) {}
 
 func (s *Npm) Check(ctx p.Context, name string, oldInputs, newInputs resource.PropertyMap) (NpmArgs, []p.CheckFailure, error) {
+	if _, ok := newInputs["version"]; !ok {
+		// if package is not in oldInputs, then this is a create operation and the read method is not
+		// called
+		if _, ok := oldInputs["package"]; !ok {
+			_, inputs, _, err := s.Read(ctx, name, NpmArgs{
+				Location: newInputs["location"].StringValue(),
+				Package:  newInputs["package"].StringValue(),
+			}, NpmState{})
+			if err != nil {
+				return NpmArgs{}, nil, err
+			}
+			newInputs["version"] = resource.NewStringProperty(*inputs.Version)
+		} else {
+			newInputs["version"] = oldInputs["version"]
+		}
+	}
 	return infer.DefaultCheck[NpmArgs](newInputs)
+}
+
+// Read is only called during --refresh operations
+func (s *Npm) Read(ctx p.Context, id string, inputs NpmArgs, state NpmState) (
+	canonicalID string, normalizedInputs NpmArgs, normalizedState NpmState, err error,
+) {
+	c := &CommandOutputs{}
+	if inputs.Version == nil {
+		cmd := fmt.Sprintf("npm view %s version", inputs.Package)
+		v, err := c.run(ctx, cmd, state.Location)
+		if err != nil {
+			return "", NpmArgs{}, NpmState{}, err
+		}
+		inputs.Version = &v
+	}
+	return id, inputs, state, nil
 }
 
 func (s *Npm) Diff(ctx p.Context, id string, olds NpmState, news NpmArgs) (p.DiffResponse, error) {
 	diff := map[string]p.PropertyDiff{}
-	if *news.Location != *olds.Location {
+	if news.Location != olds.Location {
 		diff["location"] = p.PropertyDiff{Kind: p.UpdateReplace, InputDiff: true}
 	}
 
-	for _, o := range *olds.Packages {
-		if !slices.Contains(*news.Packages, o) {
-			diff["packages"] = p.PropertyDiff{Kind: p.Update, InputDiff: true}
-		}
-	}
-	for _, n := range *news.Packages {
-		if !slices.Contains(*olds.Packages, n) {
-			diff["packages"] = p.PropertyDiff{Kind: p.Update, InputDiff: true}
-		}
+	if news.Package != olds.Package {
+		diff["packages"] = p.PropertyDiff{Kind: p.Update, InputDiff: true}
 	}
 
-	c := &CommandOutputs{}
-	deps := *olds.Deps
-	for k := range deps {
-		cmd := fmt.Sprintf("npm view %s version", k)
-		v, err := c.run(ctx, cmd, *olds.Location)
-		if err != nil {
-			return p.DiffResponse{}, err
-		}
-		if strings.TrimSpace(v) != deps[k] {
-			ctx.Logf(diag.Debug, "%s: old version: %s, new version: %s", k, deps[k], v)
-			diff["deps"] = p.PropertyDiff{Kind: p.Update, InputDiff: false}
-		}
+	if *news.Version != *olds.Version {
+		diff["version"] = p.PropertyDiff{Kind: p.Update, InputDiff: true}
 	}
 
 	return p.DiffResponse{
@@ -95,34 +104,17 @@ func (s *Npm) Diff(ctx p.Context, id string, olds NpmState, news NpmArgs) (p.Dif
 func (s *Npm) Create(ctx p.Context, name string, input NpmArgs, preview bool) (string, NpmState, error) {
 	state := &NpmState{
 		NpmArgs: input,
-		Deps:    &map[string]string{},
 	}
 
 	if preview {
 		return name, *state, nil
 	}
 
-	_, err := os.Lstat(*input.Location)
+	_, err := os.Lstat(input.Location)
 	if err != nil {
-		return "", NpmState{}, err
+		return "", NpmState{}, fmt.Errorf("location %s does not exist", input.Location)
 	}
 
-	content := map[string]interface{}{
-		"name":         "npm",
-		"scripts":      map[string]string{},
-		"dependencies": map[string]string{},
-		"main":         "lib/index.js",
-		"license":      "Apache-2.0",
-		"version":      "0.0.0",
-	}
-
-	c, err := json.MarshalIndent(content, "", "\t")
-	if err != nil {
-		return "", NpmState{}, err
-	}
-	if err := os.WriteFile(filepath.Join(*input.Location, "package.json"), c, 0755); err != nil {
-		return "", NpmState{}, err
-	}
 	if err := state.install(ctx); err != nil {
 		return "", NpmState{}, err
 	}
@@ -132,15 +124,10 @@ func (s *Npm) Create(ctx p.Context, name string, input NpmArgs, preview bool) (s
 func (s *Npm) Update(ctx p.Context, name string, olds NpmState, news NpmArgs, preview bool) (NpmState, error) {
 	state := &NpmState{
 		NpmArgs: news,
-		Deps:    olds.Deps,
 	}
 
 	if preview {
 		return *state, nil
-	}
-	deps := *olds.Deps
-	for k := range *olds.Deps {
-		deps[k] = "latest"
 	}
 
 	if err := state.install(ctx); err != nil {
@@ -150,44 +137,21 @@ func (s *Npm) Update(ctx p.Context, name string, olds NpmState, news NpmArgs, pr
 }
 
 func (s *Npm) Delete(ctx p.Context, id string, props NpmState) error {
-	if err := os.Remove(filepath.Join(*props.Location, "package.json")); err != nil && !os.IsNotExist(err) {
-		return err
-	}
+	c := &CommandOutputs{}
 
-	if err := os.RemoveAll(filepath.Join(*props.Location, "node_modules")); err != nil && !os.IsNotExist(err) {
+	if _, err := c.run(ctx, fmt.Sprintf("npm uninstall %s", props.Package), props.Location); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Install a npm package to a local directory, get the version of that package that
-// was just installed and save it to the state.
-// We need to get the version by executing the package's binary because if this is the first time
-// we are running this, the location will not be available globally yet
+// Install a npm package to a local directory
 func (n *NpmState) install(ctx p.Context) error {
 	c := &CommandOutputs{}
 
-	deps := *n.Deps
-	for _, p := range *n.Packages {
-		pkgVersion := "latest"
-		if v, ok := deps[p]; ok {
-			pkgVersion = v
-		}
-		if _, err := c.run(ctx, fmt.Sprintf("npm install %s@%s", p, pkgVersion), *n.Location); err != nil {
-			return err
-		}
-		versionCmd := fmt.Sprintf(`npm ls --depth 0 --json -l | jq '.dependencies."%s".version' -r\`, p)
-		version, err := c.run(ctx, versionCmd, *n.Location)
-		if err != nil {
-			return err
-		}
-
-		if err != nil {
-			return err
-		}
-		deps[p] = version
+	if _, err := c.run(ctx, fmt.Sprintf("npm install %s@%s", n.Package, *n.Version), n.Location); err != nil {
+		return err
 	}
-	n.Deps = &deps
 
 	return nil
 }
